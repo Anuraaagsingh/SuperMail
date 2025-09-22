@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@supermail/hooks/useAuth';
+import { getDemoEmails } from '@supermail/lib/demoAuth';
 
 interface MailHookOptions {
   label?: string;
@@ -33,36 +34,49 @@ export function useMail({ label = 'INBOX', maxResults = 20, q }: MailHookOptions
         throw new Error('No auth token found');
       }
 
-      // Build query params
-      const params = new URLSearchParams();
-      params.append('label', label);
-      params.append('maxResults', maxResults.toString());
-      if (pageToken) params.append('pageToken', pageToken);
-      if (q) params.append('q', q);
-
-      const response = await fetch(`/api/mail/list?${params.toString()}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch messages');
-      }
-
-      const data = await response.json();
+      // Check if using demo account
+      const user = localStorage.getItem('user');
+      const isDemo = user && JSON.parse(user).id === 'demo-user-id';
       
-      if (pageToken) {
-        // Append messages for pagination
-        setMessages(prev => [...prev, ...data.messages]);
-      } else {
-        // Replace messages for new queries
+      if (isDemo) {
+        // Use demo data
+        const data = await getDemoEmails(label);
         setMessages(data.messages);
+        setNextPageToken(data.nextPageToken);
+        setResultSizeEstimate(data.resultSizeEstimate);
+      } else {
+        // Use real Gmail API
+        // Build query params
+        const params = new URLSearchParams();
+        params.append('label', label);
+        params.append('maxResults', maxResults.toString());
+        if (pageToken) params.append('pageToken', pageToken);
+        if (q) params.append('q', q);
+
+        const response = await fetch(`/api/mail/list?${params.toString()}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to fetch messages');
+        }
+
+        const data = await response.json();
+        
+        if (pageToken) {
+          // Append messages for pagination
+          setMessages(prev => [...prev, ...data.messages]);
+        } else {
+          // Replace messages for new queries
+          setMessages(data.messages);
+        }
+        
+        setNextPageToken(data.nextPageToken);
+        setResultSizeEstimate(data.resultSizeEstimate);
       }
-      
-      setNextPageToken(data.nextPageToken);
-      setResultSizeEstimate(data.resultSizeEstimate);
     } catch (err) {
       console.error('Error fetching messages:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch messages');

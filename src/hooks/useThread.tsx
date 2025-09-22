@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from './useAuth';
+import { useAuth } from '@supermail/hooks/useAuth';
+import { getDemoThread } from '@supermail/lib/demoAuth';
 
 export function useThread(threadId: string) {
   const [thread, setThread] = useState<any>(null);
@@ -25,18 +26,30 @@ export function useThread(threadId: string) {
         throw new Error('No auth token found');
       }
 
-      const response = await fetch(`/api/mail/thread?id=${threadId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      // Check if using demo account
+      const user = localStorage.getItem('user');
+      const isDemo = user && JSON.parse(user).id === 'demo-user-id';
+      
+      let data;
+      if (isDemo) {
+        // Use demo data
+        data = await getDemoThread(threadId);
+      } else {
+        // Use real Gmail API
+        const response = await fetch(`/api/mail/thread?id=${threadId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch thread');
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to fetch thread');
+        }
+
+        data = await response.json();
       }
-
-      const data = await response.json();
+      
       setThread(data);
     } catch (err) {
       console.error('Error fetching thread:', err);
@@ -61,31 +74,49 @@ export function useThread(threadId: string) {
         throw new Error('No auth token found');
       }
 
-      const response = await fetch('/api/mail/action', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action,
-          messageId,
-          threadId,
-          ...options,
-        }),
-      });
+      // Check if using demo account
+      const user = localStorage.getItem('user');
+      const isDemo = user && JSON.parse(user).id === 'demo-user-id';
+      
+      if (isDemo) {
+        // Simulate successful action for demo account
+        // In a real app, you might want to update the demo data state
+        
+        // Simulate network delay
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Refresh thread data
+        fetchThread();
+        
+        return { success: true, result: { status: 'success' } };
+      } else {
+        // Use real Gmail API
+        const response = await fetch('/api/mail/action', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            action,
+            messageId,
+            threadId,
+            ...options,
+          }),
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to perform action');
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to perform action');
+        }
+
+        const result = await response.json();
+        
+        // Refresh thread data after action
+        fetchThread();
+        
+        return { success: true, result };
       }
-
-      const result = await response.json();
-      
-      // Refresh thread data after action
-      fetchThread();
-      
-      return { success: true, result };
     } catch (err) {
       console.error(`Error performing ${action}:`, err);
       return { 
