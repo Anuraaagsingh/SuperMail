@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { EmailComposer } from '@/components/mail/compose/EmailComposer';
 import { useAuth } from '@/hooks/useAuth';
 
-export default function ComposePage() {
+function ComposeContent() {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -54,5 +54,17 @@ export default function ComposePage() {
         />
       </div>
     </div>
+  );
+}
+
+export default function ComposePage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="h-8 w-8 rounded-full border-4 border-t-blue-500 animate-spin"></div>
+      </div>
+    }>
+      <ComposeContent />
+    </Suspense>
   );
 }

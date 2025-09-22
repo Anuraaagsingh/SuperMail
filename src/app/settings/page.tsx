@@ -10,8 +10,9 @@ import { Textarea } from '@supermail/components/ui/textarea';
 import { Switch } from '@supermail/components/ui/switch';
 import { Label } from '@supermail/components/ui/label';
 import { useAuth } from '@supermail/hooks/useAuth';
+import { AuthProvider } from '@supermail/hooks/useAuth';
 
-export default function SettingsPage() {
+function SettingsContent() {
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
   
@@ -276,5 +277,13 @@ export default function SettingsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <AuthProvider>
+      <SettingsContent />
+    </AuthProvider>
   );
 }

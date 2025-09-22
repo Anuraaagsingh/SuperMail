@@ -7,6 +7,9 @@ import {
   GMAIL_SCOPES
 } from '@/lib/auth';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const { code, redirectUri } = await request.json();
