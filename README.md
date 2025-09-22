@@ -16,11 +16,11 @@ A Superhuman-inspired email client with speed, UX, and keyboard-first workflows.
 
 ## Tech Stack
 
-- **Frontend**: Next.js 14 + TypeScript + React + shadcn/ui components + Tailwind CSS
+- **Frontend**: Next.js 14 + TypeScript + React 18 + shadcn/ui components + Tailwind CSS
 - **Backend**: Next.js API routes / server actions
 - **Auth / Mail**: Google OAuth (OAuth2) + Gmail API
 - **Database**: Supabase (Postgres)
-- **Scheduler**: Supabase edge functions / serverless cron
+- **Scheduler**: Vercel cron jobs
 - **Storage**: Supabase storage
 - **CI/CD**: Vercel automatic deploy
 
@@ -28,8 +28,8 @@ A Superhuman-inspired email client with speed, UX, and keyboard-first workflows.
 
 ### Prerequisites
 
-- Node.js 18+ and npm
-- Supabase account
+- Node.js 18.17.0+ and npm (Next.js 14 requirement)
+- Supabase account (for database and authentication)
 - Google Cloud Platform account with Gmail API enabled
 - Vercel account (for deployment)
 
@@ -38,29 +38,38 @@ A Superhuman-inspired email client with speed, UX, and keyboard-first workflows.
 Create a `.env.local` file with the following variables:
 
 ```
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 
-# Google OAuth
-NEXT_PUBLIC_GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
+# Google OAuth Configuration
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
 
-# JWT
-JWT_SECRET=
+# JWT Secret for token encryption/decryption
+JWT_SECRET=your_jwt_secret_at_least_32_characters_long
 
-# Vercel
-VERCEL_URL=
+# Redirect URI for OAuth callback
+NEXT_PUBLIC_REDIRECT_URI=http://localhost:3000/auth/callback
+
+# Vercel (for production)
+VERCEL_URL=your_vercel_deployment_url
 ```
+
+**Important Notes:**
+1. For local development, set `NEXT_PUBLIC_REDIRECT_URI` to your localhost callback URL
+2. For production, update `NEXT_PUBLIC_REDIRECT_URI` to your Vercel deployment URL
+3. Generate a strong random string for `JWT_SECRET` (at least 32 characters)
+4. Make sure your Google OAuth credentials have the correct redirect URI configured
+5. In Google Cloud Console, enable Gmail API and configure OAuth consent screen with required scopes
 
 ### Installation
 
 1. Clone the repository
    ```bash
-   git clone https://github.com/yourusername/supermail.git
-   cd supermail
+   git clone https://github.com/Anuraaagsingh/SuperMail.git
+   cd SuperMail
    ```
 
 2. Install dependencies
@@ -68,15 +77,22 @@ VERCEL_URL=
    npm install
    ```
 
-3. Set up Supabase
+3. Create a `.env.local` file with all required environment variables as described above
+
+4. Set up Supabase
    - Create a new Supabase project
    - Run the schema.sql script in the Supabase SQL editor
    - Add the Supabase URL and keys to your .env.local file
 
-4. Set up Google OAuth
+5. Set up Google OAuth
    - Create a new project in Google Cloud Console
    - Enable the Gmail API
-   - Create OAuth credentials with the following scopes:
+   - Configure the OAuth consent screen (External type is fine for development)
+   - Create OAuth credentials (Web application type)
+   - Add authorized redirect URIs:
+     - http://localhost:3000/auth/callback (for development)
+     - https://your-vercel-domain.vercel.app/auth/callback (for production)
+   - Create credentials with the following scopes:
      - https://www.googleapis.com/auth/gmail.readonly
      - https://www.googleapis.com/auth/gmail.modify
      - https://www.googleapis.com/auth/gmail.send
@@ -85,12 +101,12 @@ VERCEL_URL=
      - https://www.googleapis.com/auth/userinfo.profile
    - Add the client ID and secret to your .env.local file
 
-5. Run the development server
+6. Run the development server
    ```bash
    npm run dev
    ```
 
-6. Open [http://localhost:3000](http://localhost:3000) in your browser
+7. Open [http://localhost:3000](http://localhost:3000) in your browser
 
 ### Database Setup
 
@@ -166,10 +182,39 @@ CREATE TABLE IF NOT EXISTS actions_log (
 The application is configured for deployment on Vercel:
 
 1. Connect your GitHub repository to Vercel
-2. Add all environment variables in the Vercel project settings
-3. Set up Vercel Cron jobs for the following endpoints:
-   - `/api/cron/snooze` - Run every 5 minutes to process snoozed emails
-   - `/api/cron/schedule` - Run every 5 minutes to process scheduled sends
+   ```bash
+   npm install -g vercel
+   vercel login
+   vercel
+   ```
+
+2. Add all environment variables in the Vercel project settings:
+   - Go to your project on Vercel dashboard
+   - Navigate to Settings > Environment Variables
+   - Add all the variables from your .env.local file
+   - Make sure to update `NEXT_PUBLIC_REDIRECT_URI` to your production URL
+
+3. Set up Vercel Cron jobs by adding the following to your `vercel.json` file:
+   ```json
+   {
+     "crons": [
+       {
+         "path": "/api/cron/snooze",
+         "schedule": "*/5 * * * *"
+       },
+       {
+         "path": "/api/cron/schedule",
+         "schedule": "*/5 * * * *"
+       }
+     ]
+   }
+   ```
+
+4. Configure build settings:
+   - Node.js Version: 18.x (or higher)
+   - Build Command: `npm run build`
+   - Output Directory: `.next`
+   - Install Command: `npm install`
 
 ## Project Structure
 

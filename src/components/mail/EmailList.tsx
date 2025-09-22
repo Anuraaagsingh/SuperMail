@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { AutoSizer, List, WindowScroller } from 'react-virtualized';
 import { EmailListItem } from './EmailListItem';
-import { useMail } from '@/hooks/useMail';
+import { useMail } from '@supermail/hooks/useMail';
 
 interface EmailListProps {
   label?: string;

@@ -6,8 +6,8 @@ import { Command } from 'cmdk';
 import {
   Dialog,
   DialogContent,
-} from '@/components/ui/dialog';
-import { useAuth } from '@/hooks/useAuth';
+} from '@supermail/components/ui/dialog';
+import { useAuth } from '@supermail/hooks/useAuth';
 
 interface CommandPaletteProps {
   isOpen: boolean;
@@ -68,11 +68,13 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
       <DialogContent className="p-0 gap-0 max-w-[640px]">
         <Command
           className="rounded-lg border shadow-md"
-          filter={(value, search, keywords) => {
+          // Updated filter to match the expected signature
+          filter={(value, search) => {
             if (search.startsWith('/')) {
               return value.startsWith(search.slice(1)) ? 1 : 0;
             }
-            return keywords.includes(search.toLowerCase()) ? 1 : 0;
+            // Check if the value contains the search term
+            return value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0;
           }}
         >
           <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
@@ -104,7 +106,6 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
                     value="inbox"
                     onSelect={handleSelect}
                     className="px-2 py-1.5 rounded-sm text-sm cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800"
-                    keywords={['inbox', 'mail', 'email', 'g i']}
                   >
                     <div className="flex items-center">
                       <svg
@@ -132,7 +133,6 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
                     value="starred"
                     onSelect={handleSelect}
                     className="px-2 py-1.5 rounded-sm text-sm cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800"
-                    keywords={['starred', 'important', 'g s']}
                   >
                     <div className="flex items-center">
                       <svg
@@ -160,7 +160,6 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
                     value="sent"
                     onSelect={handleSelect}
                     className="px-2 py-1.5 rounded-sm text-sm cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800"
-                    keywords={['sent', 'g t']}
                   >
                     <div className="flex items-center">
                       <svg
@@ -188,7 +187,6 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
                     value="snoozed"
                     onSelect={handleSelect}
                     className="px-2 py-1.5 rounded-sm text-sm cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800"
-                    keywords={['snoozed', 'g z']}
                   >
                     <div className="flex items-center">
                       <svg
@@ -216,7 +214,6 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
                     value="drafts"
                     onSelect={handleSelect}
                     className="px-2 py-1.5 rounded-sm text-sm cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800"
-                    keywords={['drafts', 'g d']}
                   >
                     <div className="flex items-center">
                       <svg
@@ -246,7 +243,6 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
                     value="compose"
                     onSelect={handleSelect}
                     className="px-2 py-1.5 rounded-sm text-sm cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800"
-                    keywords={['compose', 'new', 'email', 'c']}
                   >
                     <div className="flex items-center">
                       <svg
@@ -274,7 +270,6 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
                     value="settings"
                     onSelect={handleSelect}
                     className="px-2 py-1.5 rounded-sm text-sm cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800"
-                    keywords={['settings', 'preferences', ',']}
                   >
                     <div className="flex items-center">
                       <svg

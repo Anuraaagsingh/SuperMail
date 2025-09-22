@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Button } from '@supermail/components/ui/button';
+import { Input } from '@supermail/components/ui/input';
+import { Textarea } from '@supermail/components/ui/textarea';
+import { Card, CardContent, CardFooter, CardHeader } from '@supermail/components/ui/card';
 import { ScheduleDialog } from './ScheduleDialog';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@supermail/hooks/useAuth';
 
 interface EmailComposerProps {
   mode?: 'new' | 'reply' | 'replyAll' | 'forward';

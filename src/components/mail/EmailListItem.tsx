@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { Badge } from '@supermail/components/ui/badge';
+import { cn } from '@supermail/lib/utils';
 
 interface EmailListItemProps {
   message: any;

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from './useAuth';
+import { useAuth } from '@supermail/hooks/useAuth';
 
 interface MailHookOptions {
   label?: string;

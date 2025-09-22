@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { addDays, addHours, set, format } from 'date-fns';
-import { Calendar } from '@/components/ui/calendar';
+import { Calendar } from '@supermail/components/ui/calendar';
 import {
   Dialog,
   DialogContent,
@@ -10,14 +10,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+} from '@supermail/components/ui/dialog';
+import { Button } from '@supermail/components/ui/button';
+import { Input } from '@supermail/components/ui/input';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
+} from '@supermail/components/ui/popover';
 
 interface ScheduleDialogProps {
   isOpen: boolean;

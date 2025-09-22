@@ -3,12 +3,12 @@
 import { ReactNode, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { AuthProvider } from '@/hooks/useAuth';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { CommandPalette } from '@/components/CommandPalette';
-import { KeyboardShortcutsDialog } from '@/components/KeyboardShortcutsDialog';
-import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { AuthProvider } from '@supermail/hooks/useAuth';
+import { Button } from '@supermail/components/ui/button';
+import { cn } from '@supermail/lib/utils';
+import { CommandPalette } from '@supermail/components/CommandPalette';
+import { KeyboardShortcutsDialog } from '@supermail/components/KeyboardShortcutsDialog';
+import { useKeyboardShortcuts } from '@supermail/hooks/useKeyboardShortcuts';
 
 interface MailLayoutProps {
   children: ReactNode;

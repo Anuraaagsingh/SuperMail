@@ -7,8 +7,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+} from '@supermail/components/ui/dialog';
+import { Button } from '@supermail/components/ui/button';
 
 interface ShortcutItemProps {
   keys: string[];

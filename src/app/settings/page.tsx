@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { useAuth } from '@/hooks/useAuth';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@supermail/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@supermail/components/ui/card';
+import { Button } from '@supermail/components/ui/button';
+import { Input } from '@supermail/components/ui/input';
+import { Textarea } from '@supermail/components/ui/textarea';
+import { Switch } from '@supermail/components/ui/switch';
+import { Label } from '@supermail/components/ui/label';
+import { useAuth } from '@supermail/hooks/useAuth';
 
 export default function SettingsPage() {
   const { isAuthenticated, isLoading, user } = useAuth();

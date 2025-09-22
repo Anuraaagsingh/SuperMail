@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { GMAIL_SCOPES } from '@/lib/auth';
+import { Button } from '@supermail/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@supermail/components/ui/card';
+import { GMAIL_SCOPES } from '@supermail/lib/auth';
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
