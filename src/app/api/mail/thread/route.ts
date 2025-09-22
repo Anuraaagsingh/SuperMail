@@ -1,0 +1,42 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createGmailClient } from '@/lib/gmail';
+import { verifyUserJWT } from '@/lib/auth';
+
+export async function GET(request: NextRequest) {
+  try {
+    // Get auth token from header
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    const userId = verifyUserJWT(token);
+    
+    if (!userId) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
+    
+    // Get thread ID from query params
+    const searchParams = request.nextUrl.searchParams;
+    const threadId = searchParams.get('id');
+    
+    if (!threadId) {
+      return NextResponse.json({ error: 'Thread ID is required' }, { status: 400 });
+    }
+    
+    // Create Gmail client
+    const gmailClient = createGmailClient(userId);
+    
+    // Get thread
+    const thread = await gmailClient.getThread(threadId);
+    
+    return NextResponse.json(thread);
+  } catch (error) {
+    console.error('Error fetching thread:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch thread' }, 
+      { status: 500 }
+    );
+  }
+}
