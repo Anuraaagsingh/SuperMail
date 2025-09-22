@@ -9,6 +9,7 @@ import { cn } from '@supermail/lib/utils';
 import { CommandPalette } from '@supermail/components/CommandPalette';
 import { KeyboardShortcutsDialog } from '@supermail/components/KeyboardShortcutsDialog';
 import { useKeyboardShortcuts } from '@supermail/hooks/useKeyboardShortcuts';
+import { ClientScheduler } from '@supermail/components/ClientScheduler';
 
 interface MailLayoutProps {
   children: ReactNode;
@@ -31,6 +32,9 @@ export default function MailLayout({ children }: MailLayoutProps) {
   
   return (
     <AuthProvider>
+      {/* Client-side scheduler for handling scheduled emails and snoozed emails */}
+      <ClientScheduler />
+      
       <div className="flex h-screen overflow-hidden">
         {/* Sidebar */}
         <div className="w-64 border-r bg-slate-50 dark:bg-slate-900 flex flex-col">

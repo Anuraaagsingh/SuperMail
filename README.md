@@ -20,9 +20,9 @@ A Superhuman-inspired email client with speed, UX, and keyboard-first workflows.
 - **Backend**: Next.js API routes / server actions
 - **Auth / Mail**: Google OAuth (OAuth2) + Gmail API
 - **Database**: Supabase (Postgres)
-- **Scheduler**: Vercel cron jobs
+- **Scheduler**: Client-side scheduling system
 - **Storage**: Supabase storage
-- **CI/CD**: Vercel automatic deploy
+- **CI/CD**: Vercel automatic deploy (free tier)
 
 ## Getting Started
 
@@ -179,7 +179,7 @@ CREATE TABLE IF NOT EXISTS actions_log (
 
 ### Deployment
 
-The application is configured for deployment on Vercel:
+The application is configured for deployment on Vercel's free tier:
 
 1. Connect your GitHub repository to Vercel
    ```bash
@@ -194,27 +194,26 @@ The application is configured for deployment on Vercel:
    - Add all the variables from your .env.local file
    - Make sure to update `NEXT_PUBLIC_REDIRECT_URI` to your production URL
 
-3. Set up Vercel Cron jobs by adding the following to your `vercel.json` file:
-   ```json
-   {
-     "crons": [
-       {
-         "path": "/api/cron/snooze",
-         "schedule": "*/5 * * * *"
-       },
-       {
-         "path": "/api/cron/schedule",
-         "schedule": "*/5 * * * *"
-       }
-     ]
-   }
-   ```
-
-4. Configure build settings:
+3. Configure build settings:
    - Node.js Version: 18.x (or higher)
    - Build Command: `npm run build`
    - Output Directory: `.next`
    - Install Command: `npm install`
+
+### Scheduling System
+
+SuperMail uses a client-side scheduling system that works without requiring Vercel's Pro plan for cron jobs:
+
+- **How it works**: When users are active in the app, the client checks for scheduled emails and snoozed emails that need processing.
+- **Check frequency**: Checks happen when:
+  - The user first loads the app
+  - The user interacts with the app (throttled to prevent excessive checks)
+  - Every 5 minutes while the app is open
+
+This approach has some limitations compared to server-side cron jobs:
+- Scheduled emails will only send when a user is active in the app
+- There might be slight delays in processing
+- For mission-critical scheduling, consider upgrading to Vercel Pro or implementing a dedicated scheduling service
 
 ## Project Structure
 
