@@ -1,10 +1,13 @@
 import { createSupabaseServerClient } from './supabase';
 import CryptoJS from 'crypto-js';
-import jwt from 'jsonwebtoken';
+import { SignJWT, jwtVerify } from 'jose';
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
 const JWT_SECRET = process.env.SUPABASE_JWT_SECRET || process.env.supermail_SUPABASE_JWT_SECRET || process.env.JWT_SECRET || 'fallback-jwt-secret-for-development-only';
+
+// Create a secret key for JWT
+const secret = new TextEncoder().encode(JWT_SECRET);
 
 // Required Gmail API scopes
 export const GMAIL_SCOPES = [
@@ -27,16 +30,22 @@ export const decryptToken = (encryptedToken: string): string => {
   return bytes.toString(CryptoJS.enc.Utf8);
 };
 
-// Generate a JWT for the user
-export const generateUserJWT = (userId: string): string => {
-  return jwt.sign({ sub: userId }, JWT_SECRET, { expiresIn: '7d' });
+// Generate a JWT for the user (browser-compatible)
+export const generateUserJWT = async (userId: string): Promise<string> => {
+  const jwt = await new SignJWT({ sub: userId })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('7d')
+    .sign(secret);
+  
+  return jwt;
 };
 
-// Verify a JWT and return the user ID
-export const verifyUserJWT = (token: string): string | null => {
+// Verify a JWT and return the user ID (browser-compatible)
+export const verifyUserJWT = async (token: string): Promise<string | null> => {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { sub: string };
-    return decoded.sub;
+    const { payload } = await jwtVerify(token, secret);
+    return payload.sub as string;
   } catch (error) {
     console.error('JWT verification failed:', error);
     return null;

@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@supe
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@supermail/components/ui/tabs';
 import { useAuth } from '@supermail/hooks/useAuth';
 import { getErrorMessage } from '@supermail/lib/utils';
+import { ThemeToggle } from '@supermail/components/ThemeToggle';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -55,10 +56,13 @@ export default function LoginPage() {
   };
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center p-4">
+      {/* Theme Toggle */}
+      <ThemeToggle />
+      
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-30">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-purple-50/50"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-purple-50/50 dark:from-blue-900/20 dark:to-purple-900/20"></div>
         <div className="absolute inset-0" style={{
           backgroundImage: `radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.3) 1px, transparent 0)`,
           backgroundSize: '20px 20px'
@@ -74,47 +78,47 @@ export default function LoginPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">SuperMail</h1>
-          <p className="text-slate-600">Your modern email experience</p>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">SuperMail</h1>
+          <p className="text-slate-600 dark:text-slate-400">Your modern email experience</p>
         </div>
 
         {/* Login Card */}
-        <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+        <Card className="border-0 shadow-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
           <CardContent className="p-8">
             {/* Error message */}
             {error && (
-              <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+              <div className="mb-6 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-sm">
                 {error}
               </div>
             )}
             
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 bg-slate-100 p-1 rounded-lg">
+              <TabsList className="grid w-full grid-cols-2 bg-slate-100 dark:bg-slate-700 p-1 rounded-lg">
                 <TabsTrigger 
                   value="demo" 
-                  className="data-[state=active]:bg-white data-[state=active]:shadow-sm text-slate-700 font-medium"
+                  className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-600 data-[state=active]:shadow-sm text-slate-700 dark:text-slate-300 font-medium"
                 >
                   Demo Account
                 </TabsTrigger>
                 <TabsTrigger 
                   value="google" 
-                  className="data-[state=active]:bg-white data-[state=active]:shadow-sm text-slate-700 font-medium"
+                  className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-600 data-[state=active]:shadow-sm text-slate-700 dark:text-slate-300 font-medium"
                 >
                   Google Account
                 </TabsTrigger>
               </TabsList>
               
               <TabsContent value="demo" className="mt-6 space-y-4">
-                <div className="p-4 rounded-lg bg-blue-50 border border-blue-200">
+                <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
                   <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <svg className="w-3 h-3 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                    <div className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-800 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <svg className="w-3 h-3 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                       </svg>
                     </div>
                     <div>
-                      <p className="font-medium text-blue-900 text-sm mb-1">Demo Mode</p>
-                      <p className="text-xs text-blue-700">Try SuperMail with pre-populated demo data. No real emails will be sent or received.</p>
+                      <p className="font-medium text-blue-900 dark:text-blue-100 text-sm mb-1">Demo Mode</p>
+                      <p className="text-xs text-blue-700 dark:text-blue-300">Try SuperMail with pre-populated demo data. No real emails will be sent or received.</p>
                     </div>
                   </div>
                 </div>
@@ -144,16 +148,16 @@ export default function LoginPage() {
               </TabsContent>
               
               <TabsContent value="google" className="mt-6 space-y-4">
-                <div className="p-4 rounded-lg bg-green-50 border border-green-200">
+                <div className="p-4 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
                   <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <svg className="w-3 h-3 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <div className="w-5 h-5 rounded-full bg-green-100 dark:bg-green-800 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <svg className="w-3 h-3 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                       </svg>
                     </div>
                     <div>
-                      <p className="font-medium text-green-900 text-sm mb-1">Ready to Connect</p>
-                      <p className="text-xs text-green-700">Sign in with your Google account to access your Gmail.</p>
+                      <p className="font-medium text-green-900 dark:text-green-100 text-sm mb-1">Ready to Connect</p>
+                      <p className="text-xs text-green-700 dark:text-green-300">Sign in with your Google account to access your Gmail.</p>
                     </div>
                   </div>
                 </div>
@@ -190,7 +194,7 @@ export default function LoginPage() {
         
         {/* Footer */}
         <div className="text-center mt-8">
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             By signing in, you agree to our Terms of Service and Privacy Policy
           </p>
         </div>

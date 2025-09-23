@@ -153,7 +153,7 @@ export const DEMO_EMAILS = [
 // Demo auth function
 export async function loginWithDemo(): Promise<{ token: string; user: typeof DEMO_USER }> {
   // Generate a JWT for the demo user
-  const token = generateUserJWT(DEMO_USER.id);
+  const token = await generateUserJWT(DEMO_USER.id);
   
   // Simulate network delay
   await new Promise(resolve => setTimeout(resolve, 800));
