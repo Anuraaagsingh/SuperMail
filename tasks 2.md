@@ -13,7 +13,8 @@
 - [ ] Optimize performance for large mailboxes — fullstack — high — 2025-09-22
 
 ## In Progress
-- [ ] (empty)
+- [ ] Fix Vercel middleware deployment error — devops — high — 2025-01-24
+- [ ] Remove deprecated Supabase packages — backend — medium — 2025-01-24
 
 ## Review
 - [ ] (empty)
@@ -53,12 +54,3 @@
   - 2025-01-24: Redesigned login page with glass morphism effects
   - 2025-01-24: Added animated background and modern UI
   - 2025-01-24: Integrated theme toggle into settings
-- [x] Fix Vercel middleware deployment error — devops — high — 2025-01-24
-  - 2025-01-24: Updated middleware with proper error handling for missing environment variables
-  - 2025-01-24: Added graceful fallback when Supabase is not configured
-  - 2025-01-24: Fixed middleware to prevent Vercel deployment failures
-  - 2025-01-24: Removed incorrect vercel.json configuration that was causing function pattern errors
-- [x] Remove deprecated Supabase packages — backend — medium — 2025-01-24
-  - 2025-01-24: Removed @supabase/auth-helpers-nextjs and @supabase/auth-helpers-shared
-  - 2025-01-24: Updated to latest @supabase/ssr and @supabase/supabase-js packages
-  - 2025-01-24: Eliminated deprecated package warnings in build logs
