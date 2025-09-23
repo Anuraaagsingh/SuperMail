@@ -6,6 +6,7 @@ import { Button } from '@supermail/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@supermail/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@supermail/components/ui/tabs';
 import { useAuth } from '@supermail/hooks/useAuth';
+import { getErrorMessage } from '@supermail/lib/utils';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -34,7 +35,7 @@ export default function LoginPage() {
       window.location.href = authUrl;
     } catch (error) {
       console.error('Login error:', error);
-      setError(error instanceof Error ? error.message : 'Failed to connect to Google');
+      setError(getErrorMessage(error));
       setIsLoading(false);
     }
   };
@@ -48,7 +49,7 @@ export default function LoginPage() {
       router.push('/mail/inbox');
     } catch (error) {
       console.error('Demo login error:', error);
-      setError(error instanceof Error ? error.message : 'Failed to login with demo account');
+      setError(getErrorMessage(error));
       setIsDemoLoading(false);
     }
   };

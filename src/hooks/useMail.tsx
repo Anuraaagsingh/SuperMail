@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@supermail/hooks/useAuth';
 import { getDemoEmails } from '@supermail/lib/demoAuth';
+import { getErrorMessage } from '@supermail/lib/utils';
 
 interface MailHookOptions {
   label?: string;
@@ -79,7 +80,7 @@ export function useMail({ label = 'INBOX', maxResults = 20, q }: MailHookOptions
       }
     } catch (err) {
       console.error('Error fetching messages:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch messages');
+      setError(getErrorMessage(err));
     } finally {
       setIsLoading(false);
     }

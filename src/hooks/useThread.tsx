@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@supermail/hooks/useAuth';
 import { getDemoThread } from '@supermail/lib/demoAuth';
+import { getErrorMessage } from '@supermail/lib/utils';
 
 export function useThread(threadId: string) {
   const [thread, setThread] = useState<any>(null);
@@ -53,7 +54,7 @@ export function useThread(threadId: string) {
       setThread(data);
     } catch (err) {
       console.error('Error fetching thread:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch thread');
+      setError(getErrorMessage(err));
     } finally {
       setIsLoading(false);
     }
@@ -121,7 +122,7 @@ export function useThread(threadId: string) {
       console.error(`Error performing ${action}:`, err);
       return { 
         success: false, 
-        error: err instanceof Error ? err.message : 'Action failed' 
+        error: getErrorMessage(err)
       };
     }
   }, [isAuthenticated, threadId, fetchThread]);
