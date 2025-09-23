@@ -41,3 +41,23 @@
   - 2025-09-22: Implemented keyboard shortcuts and command palette
 - [x] Settings page — frontend — low — 2025-09-22
   - 2025-09-22: Created settings page with theme, signature, and notification options
+- [x] Supabase + Google OAuth integration — backend — high — 2025-01-24
+  - 2025-01-24: Integrated Supabase authentication with Google OAuth
+  - 2025-01-24: Created SupabaseAuthProvider and middleware
+  - 2025-01-24: Updated login flow to support both demo and Google auth
+- [x] Mobile responsive design — frontend — high — 2025-01-24
+  - 2025-01-24: Made inbox mobile and tablet friendly
+  - 2025-01-24: Added responsive breakpoints and touch-friendly interface
+  - 2025-01-24: Fixed duplicate sidebar issue
+- [x] Glass morphism login design — frontend — medium — 2025-01-24
+  - 2025-01-24: Redesigned login page with glass morphism effects
+  - 2025-01-24: Added animated background and modern UI
+  - 2025-01-24: Integrated theme toggle into settings
+- [x] Fix Vercel middleware deployment error — devops — high — 2025-01-24
+  - 2025-01-24: Updated middleware with proper error handling for missing environment variables
+  - 2025-01-24: Added graceful fallback when Supabase is not configured
+  - 2025-01-24: Fixed middleware to prevent Vercel deployment failures
+- [x] Remove deprecated Supabase packages — backend — medium — 2025-01-24
+  - 2025-01-24: Removed @supabase/auth-helpers-nextjs and @supabase/auth-helpers-shared
+  - 2025-01-24: Updated to latest @supabase/ssr and @supabase/supabase-js packages
+  - 2025-01-24: Eliminated deprecated package warnings in build logs
