@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@supermail/hooks/useAuth';
+import { useSupabaseAuth } from '@supermail/hooks/useSupabaseAuth';
 import { useRouter } from 'next/navigation';
 import { Button } from '@supermail/components/ui/button';
 import { Input } from '@supermail/components/ui/input';
@@ -32,6 +33,7 @@ interface Email {
 
 export default function InboxPage() {
   const { isAuthenticated, isLoading, user } = useAuth();
+  const { user: supabaseUser, isAuthenticated: supabaseAuthenticated, isLoading: supabaseLoading } = useSupabaseAuth();
   const router = useRouter();
   const [showSettings, setShowSettings] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -82,12 +84,12 @@ export default function InboxPage() {
 
 
   // Redirect to login if not authenticated
-  if (!isLoading && !isAuthenticated) {
+  if (!isLoading && !supabaseLoading && !isAuthenticated && !supabaseAuthenticated) {
     router.push('/auth/login');
     return null;
   }
 
-  if (isLoading) {
+  if (isLoading || supabaseLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -125,6 +127,11 @@ export default function InboxPage() {
               <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hidden sm:inline-flex">
                 All emails
               </Badge>
+              
+              <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+                <User className="w-4 h-4" />
+                <span>{supabaseUser?.user_metadata?.full_name || user?.name || 'Demo User'}</span>
+              </div>
               
               <Button
                 variant="ghost"

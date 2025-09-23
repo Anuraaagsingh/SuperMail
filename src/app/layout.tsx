@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@supermail/hooks/useAuth';
+import { SupabaseAuthProvider } from '@supermail/hooks/useSupabaseAuth';
 import { ThemeProvider } from '@supermail/hooks/useTheme';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -20,11 +21,13 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider>
-          <AuthProvider>
-            <div className="relative min-h-screen flex flex-col">
-              {children}
-            </div>
-          </AuthProvider>
+          <SupabaseAuthProvider>
+            <AuthProvider>
+              <div className="relative min-h-screen flex flex-col">
+                {children}
+              </div>
+            </AuthProvider>
+          </SupabaseAuthProvider>
         </ThemeProvider>
       </body>
     </html>

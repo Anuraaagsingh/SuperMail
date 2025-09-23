@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@supe
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@supermail/components/ui/tabs';
 import { Input } from '@supermail/components/ui/input';
 import { useAuth } from '@supermail/hooks/useAuth';
+import { useSupabaseAuth } from '@supermail/hooks/useSupabaseAuth';
 import { getErrorMessage } from '@supermail/lib/utils';
 import { 
   Mail, 
@@ -21,6 +22,7 @@ import {
 export default function LoginPage() {
   const router = useRouter();
   const { loginWithDemo } = useAuth();
+  const { signInWithGoogle, isLoading: supabaseLoading, error: supabaseError } = useSupabaseAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isDemoLoading, setIsDemoLoading] = useState(false);
   const [error, setError] = useState('');
@@ -40,12 +42,12 @@ export default function LoginPage() {
     }
   };
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     setIsLoading(true);
     setError('');
     
     try {
-      window.location.href = '/api/auth/google';
+      await signInWithGoogle();
     } catch (error) {
       console.error('Google login error:', error);
       setError(getErrorMessage(error));
@@ -249,10 +251,10 @@ export default function LoginPage() {
                       </div>
                       <Button
                         onClick={handleGoogleLogin}
-                        disabled={isLoading}
+                        disabled={isLoading || supabaseLoading}
                         className="w-full bg-green-500 hover:bg-green-600 text-white"
                       >
-                        {isLoading ? (
+                        {(isLoading || supabaseLoading) ? (
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                         ) : (
                           'Sign in with Google'
@@ -265,9 +267,9 @@ export default function LoginPage() {
             </Tabs>
 
             {/* Error Message */}
-            {error && (
+            {(error || supabaseError) && (
               <div className="p-4 rounded-lg bg-red-500/20 border border-red-400/30 text-red-200 text-sm">
-                {error}
+                {error || supabaseError}
               </div>
             )}
 

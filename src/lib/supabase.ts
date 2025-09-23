@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createBrowserClient, createServerClient } from '@supabase/ssr';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.supermail_NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.supermail_NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
@@ -11,25 +11,51 @@ export const createSupabaseClient = () => {
     console.warn('Supabase environment variables not configured. Using placeholder values.');
   }
   
-  return createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: true
-    }
+  return createBrowserClient(supabaseUrl, supabaseAnonKey);
+};
+
+// Create a Supabase client for server usage (SSR)
+export const createSupabaseServerClient = (cookieStore: any) => {
+  if ((!process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.supermail_NEXT_PUBLIC_SUPABASE_URL) || 
+      (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY && !process.env.supermail_NEXT_PUBLIC_SUPABASE_ANON_KEY)) {
+    console.warn('Supabase environment variables not configured. Using placeholder values.');
+  }
+  
+  return createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          );
+        } catch {
+          // The `setAll` method was called from a Server Component.
+          // This can be ignored if you have middleware refreshing
+          // user sessions.
+        }
+      },
+    },
   });
 };
 
 // Create a Supabase client with service role for server usage (protected API)
-export const createSupabaseServerClient = () => {
+export const createSupabaseServiceClient = () => {
   if ((!process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.supermail_NEXT_PUBLIC_SUPABASE_URL) || 
       (!process.env.SUPABASE_SERVICE_ROLE_KEY && !process.env.supermail_SUPABASE_SERVICE_ROLE_KEY)) {
     console.warn('Supabase server environment variables not configured. Using placeholder values.');
   }
   
-  return createClient(supabaseUrl, supabaseServiceKey, {
-    auth: {
-      persistSession: false,
+  return createServerClient(supabaseUrl, supabaseServiceKey, {
+    cookies: {
+      getAll() {
+        return [];
+      },
+      setAll() {
+        // No-op for service client
+      },
     },
   });
 };
