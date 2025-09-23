@@ -1,20 +1,19 @@
-import Link from 'next/link';
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
+  const router = useRouter();
+
+  useEffect(() => {
+    // Redirect directly to login page
+    router.push('/auth/login');
+  }, [router]);
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-center font-mono text-sm">
-        <h1 className="text-4xl font-bold mb-6 text-center">SuperMail</h1>
-        <p className="text-center mb-8">A Superhuman-inspired email client</p>
-        <div className="flex justify-center">
-          <Link 
-            href="/auth/login" 
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-          >
-            Sign in with Google
-          </Link>
-        </div>
-      </div>
-    </main>
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    </div>
   );
 }

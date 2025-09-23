@@ -15,7 +15,7 @@ export const getErrorMessage = (error: unknown): string => {
 
 // Alternative approach using type guards
 export const isError = (error: unknown): error is Error => {
-  return error instanceof Error;
+  return error != null && typeof error === 'object' && 'message' in error && 'stack' in error;
 };
 
 // Safe error message extraction with fallback
