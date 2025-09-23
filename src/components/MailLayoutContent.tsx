@@ -9,7 +9,6 @@ import { CommandPalette } from '@supermail/components/CommandPalette';
 import { KeyboardShortcutsDialog } from '@supermail/components/KeyboardShortcutsDialog';
 import { useKeyboardShortcuts } from '@supermail/hooks/useKeyboardShortcuts';
 import { SearchBar } from '@supermail/components/SearchBar';
-import { ThemeToggle } from '@supermail/components/ThemeToggle';
 import { useAuth } from '@supermail/hooks/useAuth';
 
 interface MailLayoutContentProps {
@@ -34,8 +33,8 @@ export function MailLayoutContent({ children }: MailLayoutContentProps) {
   
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
-      {/* Modern Sidebar */}
-      <div className="w-72 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-r border-slate-200/50 dark:border-slate-800/50 flex flex-col">
+      {/* Modern Sidebar - Hidden on mobile, collapsible on desktop */}
+      <div className="hidden lg:flex w-72 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-r border-slate-200/50 dark:border-slate-800/50 flex-col">
         {/* Logo Section */}
         <div className="p-6 border-b border-slate-200/50 dark:border-slate-800/50">
           <div className="flex items-center gap-3">
@@ -313,8 +312,6 @@ export function MailLayoutContent({ children }: MailLayoutContentProps) {
             </div>
             
             <div className="flex items-center space-x-4 ml-6">
-              <ThemeToggle />
-              
               {user && (
                 <div className="flex items-center space-x-3">
                   <div className="text-right">

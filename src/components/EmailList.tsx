@@ -58,21 +58,21 @@ export function EmailList({ emails, onEmailClick }: EmailListProps) {
   };
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-2 sm:space-y-1">
       {emails.map((email) => (
         <div
           key={email.id}
-          className={`group relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 rounded-xl p-4 cursor-pointer transition-all duration-200 hover:bg-white/80 dark:hover:bg-slate-800/80 hover:shadow-lg hover:border-slate-300/50 dark:hover:border-slate-600/50 ${
+          className={`group relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 rounded-xl p-3 sm:p-4 cursor-pointer transition-all duration-200 hover:bg-white/80 dark:hover:bg-slate-800/80 hover:shadow-lg hover:border-slate-300/50 dark:hover:border-slate-600/50 ${
             !email.isRead ? 'ring-2 ring-blue-500/20 dark:ring-blue-400/20' : ''
           }`}
           onMouseEnter={() => setHoveredEmail(email.id)}
           onMouseLeave={() => setHoveredEmail(null)}
           onClick={() => onEmailClick(email)}
         >
-          <div className="flex items-start gap-4">
+          <div className="flex items-start gap-3 sm:gap-4">
             {/* Avatar */}
             <div className="flex-shrink-0">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white font-medium text-sm">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white font-medium text-xs sm:text-sm">
                 {email.from.charAt(0).toUpperCase()}
               </div>
             </div>
@@ -82,7 +82,7 @@ export function EmailList({ emails, onEmailClick }: EmailListProps) {
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className={`font-medium truncate ${
+                    <h3 className={`font-medium truncate text-sm sm:text-base ${
                       !email.isRead 
                         ? 'text-slate-900 dark:text-white' 
                         : 'text-slate-700 dark:text-slate-300'
@@ -94,7 +94,7 @@ export function EmailList({ emails, onEmailClick }: EmailListProps) {
                     )}
                   </div>
                   
-                  <p className={`text-sm mb-2 ${
+                  <p className={`text-sm mb-2 line-clamp-1 sm:line-clamp-none ${
                     !email.isRead 
                       ? 'text-slate-900 dark:text-white font-medium' 
                       : 'text-slate-600 dark:text-slate-400'
@@ -102,21 +102,21 @@ export function EmailList({ emails, onEmailClick }: EmailListProps) {
                     {email.subject}
                   </p>
                   
-                  <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2">
+                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 line-clamp-2 hidden sm:block">
                     {email.snippet}
                   </p>
                 </div>
 
                 {/* Time and Actions */}
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex flex-col items-end gap-1 flex-shrink-0">
                   <span className="text-xs text-slate-500 dark:text-slate-400">
                     {formatTime(email.time)}
                   </span>
                   
-                  {/* Labels */}
+                  {/* Labels - Hidden on mobile */}
                   {email.labels.length > 0 && (
-                    <div className="flex gap-1">
-                      {email.labels.slice(0, 2).map((label) => (
+                    <div className="flex gap-1 hidden sm:flex">
+                      {email.labels.slice(0, 1).map((label) => (
                         <Badge
                           key={label}
                           variant="secondary"
@@ -125,9 +125,9 @@ export function EmailList({ emails, onEmailClick }: EmailListProps) {
                           {label}
                         </Badge>
                       ))}
-                      {email.labels.length > 2 && (
+                      {email.labels.length > 1 && (
                         <Badge variant="secondary" className="text-xs px-2 py-0.5">
-                          +{email.labels.length - 2}
+                          +{email.labels.length - 1}
                         </Badge>
                       )}
                     </div>
@@ -136,8 +136,8 @@ export function EmailList({ emails, onEmailClick }: EmailListProps) {
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className={`flex items-center gap-1 transition-opacity duration-200 ${
+            {/* Action Buttons - Hidden on mobile, shown on hover */}
+            <div className={`hidden sm:flex items-center gap-1 transition-opacity duration-200 ${
               hoveredEmail === email.id ? 'opacity-100' : 'opacity-0'
             }`}>
               <Button

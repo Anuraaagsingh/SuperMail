@@ -33,10 +33,8 @@ interface Email {
 export default function InboxPage() {
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isMobile, setIsMobile] = useState(false);
 
   // Demo emails data
   const [emails] = useState<Email[]>([
@@ -82,15 +80,6 @@ export default function InboxPage() {
     }
   ]);
 
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
   // Redirect to login if not authenticated
   if (!isLoading && !isAuthenticated) {
@@ -114,10 +103,6 @@ export default function InboxPage() {
     router.push('/mail/compose');
   };
 
-  const toggleSidebar = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
-  };
-
   const filteredEmails = emails.filter(email => 
     email.from.toLowerCase().includes(searchQuery.toLowerCase()) ||
     email.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -125,75 +110,37 @@ export default function InboxPage() {
   );
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      {/* Sidebar */}
-      <div className={`${isMobile ? 'fixed inset-0 z-40' : ''} ${sidebarCollapsed ? 'w-16' : 'w-64'}`}>
-        <Sidebar
-          isCollapsed={sidebarCollapsed}
-          onToggle={toggleSidebar}
-          onCompose={handleCompose}
-          onSettings={() => setShowSettings(true)}
-        />
-      </div>
-
-      {/* Mobile Overlay */}
-      {isMobile && !sidebarCollapsed && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-30"
-          onClick={toggleSidebar}
-        />
-      )}
-
+    <div className="h-full">
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex flex-col h-full">
         {/* Header */}
-        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-700/50 px-6 py-4">
+        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-700/50 px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              {isMobile && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={toggleSidebar}
-                  className="w-8 h-8 p-0"
-                >
-                  <Menu className="w-4 h-4" />
-                </Button>
-              )}
-              
-              <div>
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Inbox</h1>
-                <p className="text-sm text-slate-500 dark:text-slate-400">All your emails in one place</p>
-              </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Inbox</h1>
+              <p className="text-sm text-slate-500 dark:text-slate-400">All your emails in one place</p>
             </div>
 
-            <div className="flex items-center gap-3">
-              <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hidden sm:inline-flex">
                 All emails
               </Badge>
               
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                  <User className="w-4 h-4" />
-                  <span>{user?.name || 'Demo User'}</span>
-                </div>
-                
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowSettings(true)}
-                  className="w-8 h-8 p-0"
-                >
-                  <Settings className="w-4 h-4" />
-                </Button>
-              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowSettings(true)}
+                className="w-8 h-8 p-0"
+              >
+                <Settings className="w-4 h-4" />
+              </Button>
             </div>
           </div>
         </div>
 
         {/* Search and Filters */}
-        <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm border-b border-slate-200/50 dark:border-slate-700/50 px-6 py-4">
-          <div className="flex items-center gap-4">
+        <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm border-b border-slate-200/50 dark:border-slate-700/50 px-4 sm:px-6 py-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
@@ -204,7 +151,7 @@ export default function InboxPage() {
               />
             </div>
             
-            <Button variant="outline" size="sm" className="border-slate-200 dark:border-slate-700">
+            <Button variant="outline" size="sm" className="border-slate-200 dark:border-slate-700 hidden sm:flex">
               <Filter className="w-4 h-4 mr-2" />
               Filter
             </Button>
@@ -216,7 +163,7 @@ export default function InboxPage() {
         </div>
 
         {/* Email List */}
-        <div className="flex-1 overflow-auto p-6">
+        <div className="flex-1 overflow-auto p-4 sm:p-6">
           <div className="max-w-4xl mx-auto">
             <EmailList 
               emails={filteredEmails} 
