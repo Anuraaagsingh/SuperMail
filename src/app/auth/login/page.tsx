@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@supe
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@supermail/components/ui/tabs';
 import { useAuth } from '@supermail/hooks/useAuth';
 import { getErrorMessage } from '@supermail/lib/utils';
-import { ThemeToggle } from '@supermail/components/ThemeToggle';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -57,9 +56,6 @@ export default function LoginPage() {
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center p-4">
-      {/* Theme Toggle */}
-      <ThemeToggle />
-      
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-30">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-purple-50/50 dark:from-blue-900/20 dark:to-purple-900/20"></div>
