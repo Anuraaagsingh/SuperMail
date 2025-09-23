@@ -15,6 +15,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (code: string, redirectUri: string) => Promise<void>;
+  loginWithDemo: () => Promise<void>;
   logout: () => void;
 }
 
@@ -78,6 +79,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const loginWithDemo = async () => {
+    setIsLoading(true);
+    
+    try {
+      // Import demo auth function
+      const { loginWithDemo: demoLogin } = await import('@supermail/lib/demoAuth');
+      const { token, user } = await demoLogin();
+      
+      localStorage.setItem('authToken', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      
+      setUser(user);
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Demo login error:', error);
+      setIsLoading(false);
+      throw error;
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
@@ -91,6 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated: !!user,
       isLoading,
       login,
+      loginWithDemo,
       logout,
     }}>
       {children}
