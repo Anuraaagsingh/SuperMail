@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Helper endpoint to get the authorization URL
-export async function GET() {
+export async function GET(request: NextRequest) {
   const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
   
   if (!GOOGLE_CLIENT_ID) {
@@ -79,7 +79,10 @@ export async function GET() {
   }
   
   const scopes = encodeURIComponent(GMAIL_SCOPES.join(' '));
-  const redirectUri = encodeURIComponent(`${process.env.VERCEL_URL || 'http://localhost:3000'}/auth/callback`);
+  const origin = request.headers.get('origin') || request.headers.get('host');
+  const protocol = request.headers.get('x-forwarded-proto') || 'http';
+  const baseUrl = `${protocol}://${origin}`;
+  const redirectUri = encodeURIComponent(`${baseUrl}/auth/callback`);
   
   const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=code&scope=${scopes}&access_type=offline&prompt=consent`;
   

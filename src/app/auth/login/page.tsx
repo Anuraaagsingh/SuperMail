@@ -19,16 +19,15 @@ export default function LoginPage() {
     setIsLoading(true);
     
     try {
-      // Construct Google OAuth URL
-      const scopes = encodeURIComponent(GMAIL_SCOPES.join(' '));
-      const redirectUri = encodeURIComponent(`${window.location.origin}/auth/callback`);
-      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+      // Get the authorization URL from our API
+      const response = await fetch('/api/auth/google');
       
-      if (!clientId) {
-        throw new Error('Google Client ID not configured');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to get authorization URL');
       }
       
-      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scopes}&access_type=offline&prompt=consent`;
+      const { authUrl } = await response.json();
       
       // Redirect to Google OAuth
       window.location.href = authUrl;
@@ -124,14 +123,14 @@ export default function LoginPage() {
             
             <TabsContent value="google" className="mt-0">
               <div className="space-y-4">
-                <div className="bg-amber-50 dark:bg-amber-900/30 p-3 rounded-md text-sm text-amber-700 dark:text-amber-300 mb-4">
+                <div className="bg-green-50 dark:bg-green-900/30 p-3 rounded-md text-sm text-green-700 dark:text-green-300 mb-4">
                   <div className="flex items-start gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <div>
-                      <p className="font-medium mb-1">Setup Required</p>
-                      <p className="text-xs">Google OAuth requires configuration. See the setup instructions below.</p>
+                      <p className="font-medium mb-1">Ready to Connect</p>
+                      <p className="text-xs">Sign in with your Google account to access your Gmail.</p>
                     </div>
                   </div>
                 </div>

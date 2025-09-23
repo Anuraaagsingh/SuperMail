@@ -3,10 +3,12 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@supermail/components/ui/card';
+import { useAuth } from '@supermail/hooks/useAuth';
 
 function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { login } = useAuth();
   const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
@@ -26,28 +28,8 @@ function AuthCallbackContent() {
       }
       
       try {
-        // Exchange code for tokens
-        const response = await fetch('/api/auth/google', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            code,
-            redirectUri: window.location.origin + '/auth/callback',
-          }),
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to authenticate');
-        }
-        
-        const data = await response.json();
-        
-        // Store token in localStorage
-        localStorage.setItem('authToken', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
+        // Use the auth context login method
+        await login(code, window.location.origin + '/auth/callback');
         
         // Redirect to inbox
         router.push('/mail/inbox');
@@ -58,7 +40,7 @@ function AuthCallbackContent() {
     };
     
     handleCallback();
-  }, [searchParams, router]);
+  }, [searchParams, router, login]);
   
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">

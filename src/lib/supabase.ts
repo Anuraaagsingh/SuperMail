@@ -1,12 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-service-key';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.supermail_NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.supermail_NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.supermail_SUPABASE_SERVICE_ROLE_KEY || 'placeholder-service-key';
 
 // Create a Supabase client for browser usage (public API)
 export const createSupabaseClient = () => {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+  if ((!process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.supermail_NEXT_PUBLIC_SUPABASE_URL) || 
+      (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY && !process.env.supermail_NEXT_PUBLIC_SUPABASE_ANON_KEY)) {
     console.warn('Supabase environment variables not configured. Using placeholder values.');
   }
   
@@ -21,7 +22,8 @@ export const createSupabaseClient = () => {
 
 // Create a Supabase client with service role for server usage (protected API)
 export const createSupabaseServerClient = () => {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  if ((!process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.supermail_NEXT_PUBLIC_SUPABASE_URL) || 
+      (!process.env.SUPABASE_SERVICE_ROLE_KEY && !process.env.supermail_SUPABASE_SERVICE_ROLE_KEY)) {
     console.warn('Supabase server environment variables not configured. Using placeholder values.');
   }
   
