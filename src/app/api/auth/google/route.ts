@@ -71,9 +71,9 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
   
-  if (!GOOGLE_CLIENT_ID) {
+  if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === 'your-google-client-id') {
     return NextResponse.json(
-      { error: 'Missing Google client ID' }, 
+      { error: 'Google OAuth not configured. Please set GOOGLE_CLIENT_ID in your environment variables.' }, 
       { status: 500 }
     );
   }
