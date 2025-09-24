@@ -260,6 +260,9 @@ export default function LoginPage() {
                           'Sign in with Google'
                         )}
                       </Button>
+                      <p className="text-xs text-green-200/70 mt-2">
+                        Requires Google OAuth setup. See GOOGLE_OAUTH_SETUP.md for instructions.
+                      </p>
                     </div>
                   </div>
                 </div>

@@ -4,7 +4,7 @@ import { SignJWT, jwtVerify } from 'jose';
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
-const JWT_SECRET = process.env.SUPABASE_JWT_SECRET || process.env.supermail_SUPABASE_JWT_SECRET || process.env.JWT_SECRET || 'fallback-jwt-secret-for-development-only';
+const JWT_SECRET = process.env.supermail_SUPABASE_JWT_SECRET || process.env.SUPABASE_JWT_SECRET || process.env.JWT_SECRET || 'fallback-jwt-secret-for-development-only';
 
 // Create a secret key for JWT
 const secret = new TextEncoder().encode(JWT_SECRET);

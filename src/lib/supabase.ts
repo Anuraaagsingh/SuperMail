@@ -1,14 +1,13 @@
 import { createBrowserClient, createServerClient } from '@supabase/ssr';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.supermail_NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.supermail_NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.supermail_SUPABASE_SERVICE_ROLE_KEY || 'placeholder-service-key';
+const supabaseUrl = process.env.supermail_NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.supermail_NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseServiceKey = process.env.supermail_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // Create a Supabase client for browser usage (public API)
 export const createSupabaseClient = () => {
-  if ((!process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.supermail_NEXT_PUBLIC_SUPABASE_URL) || 
-      (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY && !process.env.supermail_NEXT_PUBLIC_SUPABASE_ANON_KEY)) {
-    console.warn('Supabase environment variables not configured. Using placeholder values.');
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Supabase environment variables not configured. Please set supermail_NEXT_PUBLIC_SUPABASE_URL and supermail_NEXT_PUBLIC_SUPABASE_ANON_KEY in your environment variables.');
   }
   
   return createBrowserClient(supabaseUrl, supabaseAnonKey);
@@ -16,9 +15,8 @@ export const createSupabaseClient = () => {
 
 // Create a Supabase client for server usage (SSR)
 export const createSupabaseServerClient = (cookieStore: any) => {
-  if ((!process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.supermail_NEXT_PUBLIC_SUPABASE_URL) || 
-      (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY && !process.env.supermail_NEXT_PUBLIC_SUPABASE_ANON_KEY)) {
-    console.warn('Supabase environment variables not configured. Using placeholder values.');
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Supabase environment variables not configured. Please set supermail_NEXT_PUBLIC_SUPABASE_URL and supermail_NEXT_PUBLIC_SUPABASE_ANON_KEY in your environment variables.');
   }
   
   return createServerClient(supabaseUrl, supabaseAnonKey, {
@@ -43,9 +41,8 @@ export const createSupabaseServerClient = (cookieStore: any) => {
 
 // Create a Supabase client with service role for server usage (protected API)
 export const createSupabaseServiceClient = () => {
-  if ((!process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.supermail_NEXT_PUBLIC_SUPABASE_URL) || 
-      (!process.env.SUPABASE_SERVICE_ROLE_KEY && !process.env.supermail_SUPABASE_SERVICE_ROLE_KEY)) {
-    console.warn('Supabase server environment variables not configured. Using placeholder values.');
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error('Supabase service environment variables not configured. Please set supermail_NEXT_PUBLIC_SUPABASE_URL and supermail_SUPABASE_SERVICE_ROLE_KEY in your environment variables.');
   }
   
   return createServerClient(supabaseUrl, supabaseServiceKey, {
@@ -174,9 +171,9 @@ export type Database = {
           user_id: string;
           subject: string;
           body_html: string;
-          to: string[];
-          cc: string[] | null;
-          bcc: string[] | null;
+          recipients_to: string[];
+          recipients_cc: string[] | null;
+          recipients_bcc: string[] | null;
           attachments_meta: Record<string, any> | null;
           last_saved_at: string;
         };
@@ -185,9 +182,9 @@ export type Database = {
           user_id: string;
           subject: string;
           body_html: string;
-          to: string[];
-          cc?: string[] | null;
-          bcc?: string[] | null;
+          recipients_to: string[];
+          recipients_cc?: string[] | null;
+          recipients_bcc?: string[] | null;
           attachments_meta?: Record<string, any> | null;
           last_saved_at?: string;
         };
@@ -196,9 +193,9 @@ export type Database = {
           user_id?: string;
           subject?: string;
           body_html?: string;
-          to?: string[];
-          cc?: string[] | null;
-          bcc?: string[] | null;
+          recipients_to?: string[];
+          recipients_cc?: string[] | null;
+          recipients_bcc?: string[] | null;
           attachments_meta?: Record<string, any> | null;
           last_saved_at?: string;
         };

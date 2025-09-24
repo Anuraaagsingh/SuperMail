@@ -76,6 +76,13 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       setError(null);
       setIsLoading(true);
       
+      // Check if Supabase is properly configured
+      if (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')) {
+        setError('Google OAuth is not configured. Please set up Supabase and Google OAuth credentials. See GOOGLE_OAUTH_SETUP.md for instructions.');
+        setIsLoading(false);
+        return;
+      }
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -95,7 +102,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       // Note: The redirect will happen automatically, so we don't need to handle success here
     } catch (err) {
       console.error('Error in signInWithGoogle:', err);
-      setError('Failed to sign in with Google');
+      setError('Failed to sign in with Google. Please check your configuration.');
       setIsLoading(false);
     }
   };
