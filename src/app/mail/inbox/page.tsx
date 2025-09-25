@@ -53,6 +53,8 @@ export default function InboxPage() {
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
   const [showEmailView, setShowEmailView] = useState(true);
   const [showScheduleDialog, setShowScheduleDialog] = useState(false);
+  const [gmailConnected, setGmailConnected] = useState(false);
+  const [gmailMessage, setGmailMessage] = useState('');
 
   // Register user in Supabase when they first login
   const registerUser = async () => {
@@ -74,9 +76,14 @@ export default function InboxPage() {
 
       if (!response.ok) {
         console.error('Failed to register user');
+        return false;
       }
+      
+      console.log('User registered successfully');
+      return true;
     } catch (error) {
       console.error('Error registering user:', error);
+      return false;
     } finally {
       setIsRegistering(false);
     }
@@ -115,8 +122,12 @@ export default function InboxPage() {
         
         setNextPageToken(data.nextPageToken);
         setHasMoreEmails(!!data.nextPageToken);
+        setGmailConnected(true);
+        setGmailMessage('');
       } else {
         console.error('Failed to fetch emails:', data.error);
+        setGmailConnected(false);
+        setGmailMessage(data.message || 'Failed to fetch emails');
         if (data.error?.includes('Gmail not connected')) {
           // Show demo emails for users who haven't connected Gmail
           loadDemoEmails();
@@ -177,9 +188,17 @@ export default function InboxPage() {
         // Load demo emails for demo user
         loadDemoEmails();
       } else {
-        // Register real user and fetch real emails
-        registerUser();
-        fetchEmails();
+        // Register real user first, then fetch emails
+        const initializeUser = async () => {
+          const registered = await registerUser();
+          if (registered) {
+            // Wait a bit for the database to be ready
+            setTimeout(() => {
+              fetchEmails();
+            }, 1000);
+          }
+        };
+        initializeUser();
       }
     }
   }, [isAuthenticated, user]);
@@ -239,7 +258,12 @@ export default function InboxPage() {
     setShowScheduleDialog(true);
   };
 
-  const filteredEmails = emails.filter(email =>
+  const handleConnectGmail = () => {
+    // TODO: Implement Gmail OAuth connection
+    alert('Gmail connection coming soon! For now, you can use the demo emails.');
+  };
+
+  const filteredEmails = emails.filter(email => 
     email.from.toLowerCase().includes(searchQuery.toLowerCase()) ||
     email.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
     email.snippet.toLowerCase().includes(searchQuery.toLowerCase())
@@ -250,9 +274,11 @@ export default function InboxPage() {
       {/* Email List Panel */}
       <div className={`${showEmailView ? 'w-1/2' : 'w-full'} border-r bg-background transition-all duration-300`}>
         <div className="flex h-16 items-center justify-between border-b px-6">
-          <div>
+            <div>
             <h2 className="text-lg font-semibold">Inbox</h2>
-            <p className="text-sm text-muted-foreground">{emails.length} emails</p>
+            <p className="text-sm text-muted-foreground">
+              {gmailConnected ? `${emails.length} emails` : 'Gmail not connected'}
+            </p>
           </div>
           <div className="flex items-center space-x-2">
             <Button variant="ghost" size="sm">
@@ -284,8 +310,21 @@ export default function InboxPage() {
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
                 <Mail className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">No emails found</p>
-                <p className="text-sm text-muted-foreground">Your inbox is empty or try a different search</p>
+                {!gmailConnected && gmailMessage ? (
+                  <>
+                    <p className="text-muted-foreground mb-2">Gmail not connected</p>
+                    <p className="text-sm text-muted-foreground mb-4">{gmailMessage}</p>
+                    <Button onClick={handleConnectGmail} className="mb-2">
+                      Connect Gmail
+                    </Button>
+                    <p className="text-xs text-muted-foreground">Or use demo emails below</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-muted-foreground">No emails found</p>
+                    <p className="text-sm text-muted-foreground">Your inbox is empty or try a different search</p>
+                  </>
+                )}
               </div>
             </div>
           ) : (
@@ -363,8 +402,8 @@ export default function InboxPage() {
             </div>
           )}
         </div>
-      </div>
-
+            </div>
+            
       {/* Email Content Panel */}
       {showEmailView && (
         <div className="w-1/2 bg-muted/50">
@@ -409,19 +448,19 @@ export default function InboxPage() {
                     </Button>
                     <Button variant="ghost" size="sm">
                       <Archive className="h-4 w-4" />
-                    </Button>
+            </Button>
                     <Button variant="ghost" size="sm">
                       <Trash2 className="h-4 w-4" />
-                    </Button>
+            </Button>
                   </div>
                 </div>
                 <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                   <span>From: {selectedEmail.from}</span>
                   <span>•</span>
                   <span>{new Date(selectedEmail.date).toLocaleString()}</span>
-                </div>
-              </div>
-              
+          </div>
+        </div>
+
               {/* Email Body */}
               <div className="flex-1 overflow-auto p-6">
                 <div className="prose prose-sm max-w-none">
@@ -447,17 +486,17 @@ export default function InboxPage() {
                   <p>Press C to compose</p>
                   <p>Press ⌘K for commands</p>
                   <p>Press ? for help</p>
-                </div>
-              </div>
-            </div>
+          </div>
+        </div>
+      </div>
           )}
         </div>
       )}
 
       {/* Settings Overlay */}
-      <SettingsOverlay
-        isOpen={showSettings}
-        onClose={() => setShowSettings(false)}
+      <SettingsOverlay 
+        isOpen={showSettings} 
+        onClose={() => setShowSettings(false)} 
       />
 
       {/* Schedule Dialog */}
