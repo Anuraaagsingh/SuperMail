@@ -52,15 +52,15 @@ export function SettingsOverlay({ isOpen, onClose }: SettingsOverlayProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-background/80 backdrop-blur-md"
         onClick={onClose}
       />
       
       {/* Settings Panel */}
-      <div className="relative bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200/50 dark:border-slate-700/50 w-full max-w-md mx-4">
+      <div className="relative bg-background rounded-lg shadow-xl border w-full max-w-md mx-4">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-200/50 dark:border-slate-700/50">
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Settings</h2>
+        <div className="flex items-center justify-between p-6 border-b">
+          <h2 className="text-xl font-semibold">Settings</h2>
           <Button
             variant="ghost"
             size="sm"

@@ -47,6 +47,8 @@ export default function InboxPage() {
   const [nextPageToken, setNextPageToken] = useState<string | null>(null);
   const [hasMoreEmails, setHasMoreEmails] = useState(true);
   const [isRegistering, setIsRegistering] = useState(false);
+  const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
+  const [showEmailView, setShowEmailView] = useState(true);
 
   // Register user in Supabase when they first login
   const registerUser = async () => {
@@ -210,7 +212,7 @@ export default function InboxPage() {
   }
 
   const handleEmailClick = (email: Email) => {
-    router.push(`/mail/thread/${email.id}`);
+    setSelectedEmail(email);
   };
 
   const filteredEmails = emails.filter(email =>
@@ -222,7 +224,7 @@ export default function InboxPage() {
   return (
     <div className="flex h-full">
       {/* Email List Panel */}
-      <div className="w-1/2 border-r bg-background">
+      <div className={`${showEmailView ? 'w-1/2' : 'w-full'} border-r bg-background transition-all duration-300`}>
         <div className="flex h-16 items-center justify-between border-b px-6">
           <div>
             <h2 className="text-lg font-semibold">Inbox</h2>
@@ -234,6 +236,14 @@ export default function InboxPage() {
             </Button>
             <Button variant="ghost" size="sm">
               <RefreshCw className="h-4 w-4" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setShowEmailView(!showEmailView)}
+              title={showEmailView ? "Hide email view" : "Show email view"}
+            >
+              <Menu className="h-4 w-4" />
             </Button>
           </div>
         </div>
@@ -332,22 +342,64 @@ export default function InboxPage() {
       </div>
 
       {/* Email Content Panel */}
-      <div className="w-1/2 bg-muted/50">
-        <div className="h-full flex items-center justify-center">
-          <div className="text-center">
-            <Mail className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2">No message selected</h3>
-            <p className="text-muted-foreground mb-6">
-              Choose an email from the list to read it
-            </p>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <p>Press C to compose</p>
-              <p>Press ⌘K for commands</p>
-              <p>Press ? for help</p>
+      {showEmailView && (
+        <div className="w-1/2 bg-muted/50">
+          {selectedEmail ? (
+            <div className="h-full flex flex-col">
+              {/* Email Header */}
+              <div className="border-b p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">{selectedEmail.subject}</h3>
+                  <div className="flex items-center space-x-2">
+                    <Button variant="ghost" size="sm">
+                      <Star className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm">
+                      <Archive className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                  <span>From: {selectedEmail.from}</span>
+                  <span>•</span>
+                  <span>{new Date(selectedEmail.date).toLocaleString()}</span>
+                </div>
+              </div>
+              
+              {/* Email Body */}
+              <div className="flex-1 overflow-auto p-6">
+                <div className="prose prose-sm max-w-none">
+                  <p className="whitespace-pre-wrap">{selectedEmail.snippet}</p>
+                  {selectedEmail.body && (
+                    <div 
+                      className="mt-4"
+                      dangerouslySetInnerHTML={{ __html: selectedEmail.body }}
+                    />
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="h-full flex items-center justify-center">
+              <div className="text-center">
+                <Mail className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-medium mb-2">No message selected</h3>
+                <p className="text-muted-foreground mb-6">
+                  Choose an email from the list to read it
+                </p>
+                <div className="space-y-2 text-sm text-muted-foreground">
+                  <p>Press C to compose</p>
+                  <p>Press ⌘K for commands</p>
+                  <p>Press ? for help</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      </div>
+      )}
 
       {/* Settings Overlay */}
       <SettingsOverlay

@@ -7,6 +7,7 @@ import { useKeyboardShortcuts } from '@supermail/hooks/useKeyboardShortcuts';
 import { useAuth } from '@supermail/hooks/useAuth';
 import { Sidebar } from '@supermail/components/Sidebar';
 import { ThemeToggle } from '@supermail/components/theme-toggle';
+import { SettingsOverlay } from '@supermail/components/SettingsOverlay';
 import { Button } from '@supermail/components/ui/button';
 import { Menu, X, Mail, RefreshCw, Plus, Settings, Search } from 'lucide-react';
 
@@ -19,6 +20,7 @@ export function MailLayoutContent({ children }: MailLayoutContentProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   useKeyboardShortcuts({
     onCommandPalette: () => setShowCommandPalette(true),
@@ -57,16 +59,7 @@ export function MailLayoutContent({ children }: MailLayoutContentProps) {
               <Menu className="h-4 w-4" />
             </Button>
 
-            {/* Logo */}
-            <div className="flex items-center space-x-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                <Mail className="h-4 w-4 text-primary-foreground" />
-              </div>
-              <div>
-                <h1 className="text-lg font-semibold">MasterMail</h1>
-                <p className="text-xs text-muted-foreground">Built for Speed</p>
-              </div>
-            </div>
+            {/* Search only - branding moved to sidebar */}
 
             {/* Search */}
             <div className="hidden md:block md:flex-1 md:max-w-md">
@@ -96,7 +89,11 @@ export function MailLayoutContent({ children }: MailLayoutContentProps) {
               <Plus className="h-4 w-4" />
             </Button>
             <ThemeToggle />
-            <Button variant="ghost" size="sm">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setShowSettings(true)}
+            >
               <Settings className="h-4 w-4" />
             </Button>
             
@@ -131,6 +128,12 @@ export function MailLayoutContent({ children }: MailLayoutContentProps) {
       <KeyboardShortcutsDialog
         isOpen={showKeyboardShortcuts}
         onClose={() => setShowKeyboardShortcuts(false)}
+      />
+
+      {/* Settings Overlay */}
+      <SettingsOverlay
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
       />
     </div>
   );
