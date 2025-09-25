@@ -77,7 +77,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       setIsLoading(true);
       
       // Check if Supabase is properly configured
-      if (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')) {
+      if (!process.env.supermail_NEXT_PUBLIC_SUPABASE_URL || process.env.supermail_NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')) {
         setError('Google OAuth is not configured. Please set up Supabase and Google OAuth credentials. See GOOGLE_OAUTH_SETUP.md for instructions.');
         setIsLoading(false);
         return;
