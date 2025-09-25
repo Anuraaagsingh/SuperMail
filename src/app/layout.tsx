@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { ClerkProvider } from '@clerk/nextjs';
-import { ThemeProvider } from '@supermail/hooks/useTheme';
+import { ThemeProvider } from '@supermail/components/theme-provider';
 import { AuthProvider } from '@supermail/hooks/useAuth';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -21,7 +21,12 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
         <body className={inter.className}>
-          <ThemeProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
             <AuthProvider>
               <div className="relative min-h-screen flex flex-col">
                 {children}

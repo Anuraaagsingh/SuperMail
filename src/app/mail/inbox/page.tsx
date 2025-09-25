@@ -4,12 +4,9 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@supermail/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { Button } from '@supermail/components/ui/button';
-import { Input } from '@supermail/components/ui/input';
 import { Badge } from '@supermail/components/ui/badge';
 import { SettingsOverlay } from '@supermail/components/SettingsOverlay';
-import { EmailList } from '@supermail/components/EmailList';
 import { CustomLoader } from '@supermail/components/ui/custom-loader';
-import { ComposeButton } from '@supermail/components/ui/compose-button';
 import { 
   Search, 
   Filter, 
@@ -19,7 +16,11 @@ import {
   Settings,
   User,
   Loader2,
-  Mail
+  Mail,
+  Star,
+  Archive,
+  Trash2,
+  Clock
 } from 'lucide-react';
 
 interface Email {
@@ -79,55 +80,44 @@ export default function InboxPage() {
   const fetchEmails = async (pageToken?: string, append = false) => {
     setIsLoadingEmails(true);
     try {
-      const url = new URL('/api/gmail/messages', window.location.origin);
-      if (pageToken) {
-        url.searchParams.set('pageToken', pageToken);
-      }
-      url.searchParams.set('maxResults', '10');
-
-      const response = await fetch(url.toString());
+      const params = new URLSearchParams();
+      if (pageToken) params.append('pageToken', pageToken);
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch emails');
-      }
-
+      const response = await fetch(`/api/gmail/messages?${params.toString()}`);
       const data = await response.json();
       
-      if (append) {
-        setEmails(prev => [...prev, ...data.messages]);
+      if (data.success) {
+        const newEmails: Email[] = data.messages.map((msg: any) => ({
+          id: msg.id,
+          threadId: msg.threadId,
+          from: msg.from,
+          to: msg.to,
+          subject: msg.subject,
+          snippet: msg.snippet,
+          date: msg.date,
+          body: msg.body,
+          isRead: msg.isRead || false,
+          isStarred: msg.isStarred || false,
+          labels: msg.labels || [],
+        }));
+        
+        if (append) {
+          setEmails(prev => [...prev, ...newEmails]);
+        } else {
+          setEmails(newEmails);
+        }
+        
+        setNextPageToken(data.nextPageToken);
+        setHasMoreEmails(!!data.nextPageToken);
       } else {
-        setEmails(data.messages);
+        console.error('Failed to fetch emails:', data.error);
+        if (data.error?.includes('Gmail not connected')) {
+          // Show demo emails for users who haven't connected Gmail
+          loadDemoEmails();
+        }
       }
-      
-      setNextPageToken(data.nextPageToken || null);
-      setHasMoreEmails(!!data.nextPageToken);
     } catch (error) {
       console.error('Error fetching emails:', error);
-      // Fallback to demo emails if Gmail fails
-      if (!append) {
-        setEmails([
-          {
-            id: 'demo-1',
-            from: 'SuperMail Team',
-            subject: 'Welcome to SuperMail!',
-            snippet: 'This is a demo email. Connect your Gmail account to see real emails.',
-            date: new Date().toISOString(),
-            isRead: false,
-            isStarred: false,
-            labels: ['INBOX']
-          },
-          {
-            id: 'demo-2',
-            from: 'Gmail Integration',
-            subject: 'Connect Your Gmail Account',
-            snippet: 'Click the "Connect Gmail" button to fetch your real emails from Gmail.',
-            date: new Date(Date.now() - 3600000).toISOString(),
-            isRead: false,
-            isStarred: false,
-            labels: ['INBOX']
-          }
-        ]);
-      }
     } finally {
       setIsLoadingEmails(false);
     }
@@ -200,7 +190,7 @@ export default function InboxPage() {
       <div className="h-full flex items-center justify-center">
         <div className="text-center">
           <CustomLoader size="lg" className="mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400">Loading...</p>
+          <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
     );
@@ -211,7 +201,7 @@ export default function InboxPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <CustomLoader size="lg" className="mx-auto mb-4" />
-          <p className="text-slate-600 dark:text-slate-400">
+          <p className="text-muted-foreground">
             Setting up your account...
           </p>
         </div>
@@ -223,23 +213,29 @@ export default function InboxPage() {
     router.push(`/mail/thread/${email.id}`);
   };
 
-  const handleCompose = () => {
-    router.push('/mail/compose');
-  };
-
-  const filteredEmails = emails.filter(email => 
+  const filteredEmails = emails.filter(email =>
     email.from.toLowerCase().includes(searchQuery.toLowerCase()) ||
     email.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
     email.snippet.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
-    <div className="h-full flex">
+    <div className="flex h-full">
       {/* Email List Panel */}
-      <div className="w-1/2 border-r border-gray-200 dark:border-gray-700">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Inbox</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400">{emails.length} emails</p>
+      <div className="w-1/2 border-r bg-background">
+        <div className="flex h-16 items-center justify-between border-b px-6">
+          <div>
+            <h2 className="text-lg font-semibold">Inbox</h2>
+            <p className="text-sm text-muted-foreground">{emails.length} emails</p>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button variant="ghost" size="sm">
+              <Filter className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="sm">
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
         
         <div className="flex-1 overflow-auto">
@@ -247,45 +243,65 @@ export default function InboxPage() {
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
                 <CustomLoader size="lg" className="mx-auto mb-4" />
-                <p className="text-gray-600 dark:text-gray-400">Loading your emails...</p>
+                <p className="text-muted-foreground">Loading your emails...</p>
               </div>
             </div>
           ) : emails.length === 0 ? (
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
-                <p className="text-gray-500 dark:text-gray-400">No emails found. Your inbox is empty or try a different search.</p>
+                <Mail className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">No emails found</p>
+                <p className="text-sm text-muted-foreground">Your inbox is empty or try a different search</p>
               </div>
             </div>
           ) : (
-            <div className="divide-y divide-gray-200 dark:divide-gray-700">
+            <div className="divide-y">
               {filteredEmails.map((email) => (
                 <div
                   key={email.id}
                   onClick={() => handleEmailClick(email)}
-                  className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors"
+                  className="flex items-start space-x-4 p-4 hover:bg-accent cursor-pointer transition-colors"
                 >
-                  <div className="flex items-start space-x-3">
-                    <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                        {email.from.charAt(0).toUpperCase()}
-                      </div>
+                  <div className="flex-shrink-0">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
+                      {email.from.charAt(0).toUpperCase()}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                          {email.from}
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {new Date(email.date).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <p className="text-sm text-gray-900 dark:text-white font-medium mt-1">
-                        {email.subject}
-                      </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
-                        {email.snippet}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium truncate">{email.from}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(email.date).toLocaleDateString()}
                       </p>
                     </div>
+                    <p className="text-sm font-medium text-foreground mt-1 truncate">
+                      {email.subject}
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                      {email.snippet}
+                    </p>
+                    {email.labels.length > 0 && (
+                      <div className="flex items-center space-x-1 mt-2">
+                        {email.labels.slice(0, 2).map((label) => (
+                          <Badge key={label} variant="secondary" className="text-xs">
+                            {label}
+                          </Badge>
+                        ))}
+                        {email.labels.length > 2 && (
+                          <Badge variant="secondary" className="text-xs">
+                            +{email.labels.length - 2}
+                          </Badge>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    {email.isStarred && (
+                      <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                    )}
+                    {!email.isRead && (
+                      <div className="h-2 w-2 bg-primary rounded-full" />
+                    )}
                   </div>
                 </div>
               ))}
@@ -294,7 +310,7 @@ export default function InboxPage() {
           
           {/* Load More Button */}
           {hasMoreEmails && (
-            <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="p-4 border-t">
               <Button
                 onClick={loadMoreEmails}
                 disabled={isLoadingEmails}
@@ -316,17 +332,15 @@ export default function InboxPage() {
       </div>
 
       {/* Email Content Panel */}
-      <div className="w-1/2">
-        <div className="h-full flex items-center justify-center bg-gray-50 dark:bg-gray-800">
+      <div className="w-1/2 bg-muted/50">
+        <div className="h-full flex items-center justify-center">
           <div className="text-center">
-            <Mail className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              No message selected
-            </h3>
-            <p className="text-gray-500 dark:text-gray-400 mb-6">
+            <Mail className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium mb-2">No message selected</h3>
+            <p className="text-muted-foreground mb-6">
               Choose an email from the list to read it
             </p>
-            <div className="space-y-2 text-sm text-gray-500 dark:text-gray-400">
+            <div className="space-y-2 text-sm text-muted-foreground">
               <p>Press C to compose</p>
               <p>Press ⌘K for commands</p>
               <p>Press ? for help</p>
