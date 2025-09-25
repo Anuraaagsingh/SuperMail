@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@supermail/components/ui/button';
 import { Badge } from '@supermail/components/ui/badge';
 import { SettingsOverlay } from '@supermail/components/SettingsOverlay';
+import { ScheduleDialog } from '@supermail/components/ScheduleDialog';
 import { CustomLoader } from '@supermail/components/ui/custom-loader';
 import { 
   Search, 
@@ -20,7 +21,9 @@ import {
   Star,
   Archive,
   Trash2,
-  Clock
+  Clock,
+  Reply,
+  Forward
 } from 'lucide-react';
 
 interface Email {
@@ -49,6 +52,7 @@ export default function InboxPage() {
   const [isRegistering, setIsRegistering] = useState(false);
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
   const [showEmailView, setShowEmailView] = useState(true);
+  const [showScheduleDialog, setShowScheduleDialog] = useState(false);
 
   // Register user in Supabase when they first login
   const registerUser = async () => {
@@ -215,6 +219,26 @@ export default function InboxPage() {
     setSelectedEmail(email);
   };
 
+  const handleReply = (email: Email) => {
+    // TODO: Implement reply functionality
+    console.log('Replying to:', email);
+  };
+
+  const handleForward = (email: Email) => {
+    // TODO: Implement forward functionality
+    console.log('Forwarding:', email);
+  };
+
+  const handleStar = (email: Email) => {
+    // TODO: Implement star/unstar functionality
+    console.log('Toggling star for:', email);
+  };
+
+  const handleSchedule = (email: Email) => {
+    setSelectedEmail(email);
+    setShowScheduleDialog(true);
+  };
+
   const filteredEmails = emails.filter(email =>
     email.from.toLowerCase().includes(searchQuery.toLowerCase()) ||
     email.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -351,8 +375,37 @@ export default function InboxPage() {
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold">{selectedEmail.subject}</h3>
                   <div className="flex items-center space-x-2">
-                    <Button variant="ghost" size="sm">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleReply(selectedEmail)}
+                      title="Reply"
+                    >
+                      <Reply className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleForward(selectedEmail)}
+                      title="Forward"
+                    >
+                      <Forward className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleStar(selectedEmail)}
+                      title="Star"
+                    >
                       <Star className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleSchedule(selectedEmail)}
+                      title="Schedule"
+                    >
+                      <Clock className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="sm">
                       <Archive className="h-4 w-4" />
@@ -405,6 +458,13 @@ export default function InboxPage() {
       <SettingsOverlay
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
+      />
+
+      {/* Schedule Dialog */}
+      <ScheduleDialog
+        isOpen={showScheduleDialog}
+        onClose={() => setShowScheduleDialog(false)}
+        email={selectedEmail}
       />
     </div>
   );

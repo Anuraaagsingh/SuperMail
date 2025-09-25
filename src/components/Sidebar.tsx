@@ -24,9 +24,10 @@ import {
 interface SidebarProps {
   className?: string;
   onCompose?: () => void;
+  onSettings?: () => void;
 }
 
-export function Sidebar({ className, onCompose }: SidebarProps) {
+export function Sidebar({ className, onCompose, onSettings }: SidebarProps) {
   const pathname = usePathname();
 
   const navigation = [
@@ -77,7 +78,7 @@ export function Sidebar({ className, onCompose }: SidebarProps) {
       <div className="px-3 py-4">
         <Button
           onClick={onCompose}
-          className="w-full bg-foreground text-background hover:bg-foreground/90 dark:bg-background dark:text-foreground dark:hover:bg-background/90"
+          className="w-full bg-white text-black hover:bg-gray-100 dark:bg-white dark:text-black dark:hover:bg-gray-100"
         >
           + New Mail
         </Button>
@@ -169,18 +170,16 @@ export function Sidebar({ className, onCompose }: SidebarProps) {
 
       {/* Settings */}
       <div className="border-t p-3">
-        <Link
-          href="/settings"
+        <button
+          onClick={onSettings}
           className={cn(
-            "flex items-center space-x-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
-            isActive('/settings')
-              ? "bg-accent text-accent-foreground"
-              : "text-muted-foreground"
+            "flex items-center space-x-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground w-full text-left",
+            "text-muted-foreground"
           )}
         >
           <Settings className="h-4 w-4" />
           <span>Settings</span>
-        </Link>
+        </button>
       </div>
     </div>
   );

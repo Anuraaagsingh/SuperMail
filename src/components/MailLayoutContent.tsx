@@ -34,7 +34,10 @@ export function MailLayoutContent({ children }: MailLayoutContentProps) {
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
       <div className="hidden lg:flex lg:flex-shrink-0">
-        <Sidebar onCompose={() => setShowCompose(true)} />
+        <Sidebar 
+          onCompose={() => setShowCompose(true)} 
+          onSettings={() => setShowSettings(true)}
+        />
       </div>
 
       {/* Mobile Sidebar Overlay */}
@@ -42,7 +45,10 @@ export function MailLayoutContent({ children }: MailLayoutContentProps) {
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="fixed inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />
           <div className="fixed left-0 top-0 h-full w-64">
-            <Sidebar onCompose={() => setShowCompose(true)} />
+            <Sidebar 
+              onCompose={() => setShowCompose(true)} 
+              onSettings={() => setShowSettings(true)}
+            />
           </div>
         </div>
       )}
