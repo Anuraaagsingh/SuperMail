@@ -6,9 +6,10 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@supermail/components/ui/button';
 import { Input } from '@supermail/components/ui/input';
 import { Badge } from '@supermail/components/ui/badge';
-import { Sidebar } from '@supermail/components/Sidebar';
 import { SettingsOverlay } from '@supermail/components/SettingsOverlay';
 import { EmailList } from '@supermail/components/EmailList';
+import { CustomLoader } from '@supermail/components/ui/custom-loader';
+import { ComposeButton } from '@supermail/components/ui/compose-button';
 import { 
   Search, 
   Filter, 
@@ -156,7 +157,7 @@ export default function InboxPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <CustomLoader size="lg" className="mx-auto mb-4" />
           <p className="text-slate-600 dark:text-slate-400">
             {isRegistering ? 'Setting up your account...' : 'Loading...'}
           </p>
@@ -196,20 +197,18 @@ export default function InboxPage() {
                 All emails
               </Badge>
               
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+              <ComposeButton
                 onClick={() => {
                   // TODO: Implement Gmail connection flow
                   alert('Gmail connection coming soon!');
                 }}
+                className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
               >
                 <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-.904.732-1.636 1.636-1.636h3.819v9.273L12 8.183l6.545 4.91V3.82h3.819c.904 0 1.636.732 1.636 1.636z"/>
                 </svg>
                 Connect Gmail
-              </Button>
+              </ComposeButton>
               
               <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
                 <User className="w-4 h-4" />
@@ -255,14 +254,14 @@ export default function InboxPage() {
         {/* Email List */}
         <div className="flex-1 overflow-auto p-4 sm:p-6">
           <div className="max-w-4xl mx-auto">
-            {isLoadingEmails && emails.length === 0 ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="text-center">
-                  <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
-                  <p className="text-slate-600 dark:text-slate-400">Loading your emails...</p>
-                </div>
-              </div>
-            ) : (
+                {isLoadingEmails && emails.length === 0 ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                      <CustomLoader size="lg" className="mx-auto mb-4" />
+                      <p className="text-slate-600 dark:text-slate-400">Loading your emails...</p>
+                    </div>
+                  </div>
+                ) : (
               <>
                 <EmailList 
                   emails={filteredEmails} 
@@ -272,21 +271,21 @@ export default function InboxPage() {
                 {/* Load More Button */}
                 {hasMoreEmails && (
                   <div className="flex justify-center mt-6">
-                    <Button
-                      onClick={loadMoreEmails}
-                      disabled={isLoadingEmails}
-                      variant="outline"
-                      className="border-slate-200 dark:border-slate-700"
-                    >
-                      {isLoadingEmails ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Loading...
-                        </>
-                      ) : (
-                        'Load More'
-                      )}
-                    </Button>
+                        <Button
+                          onClick={loadMoreEmails}
+                          disabled={isLoadingEmails}
+                          variant="outline"
+                          className="border-slate-200 dark:border-slate-700"
+                        >
+                          {isLoadingEmails ? (
+                            <>
+                              <CustomLoader size="sm" className="mr-2" />
+                              Loading...
+                            </>
+                          ) : (
+                            'Load More'
+                          )}
+                        </Button>
                   </div>
                 )}
               </>
