@@ -13,8 +13,9 @@
 - [ ] Optimize performance for large mailboxes — fullstack — high — 2025-09-22
 
 ## In Progress
-- [ ] Setup Clerk environment variables — devops — high — 2025-09-25
-  - Need to create .env.local with Clerk keys from https://dashboard.clerk.com
+- [ ] Setup Gmail OAuth credentials — devops — high — 2025-09-25
+  - Need to configure Google Cloud Console and Gmail API
+  - Add Google OAuth credentials to environment variables
 
 ## Review
 - [ ] (empty)
@@ -76,3 +77,15 @@
   - 2025-09-25: Fixed inbox page to remove Supabase auth imports and use only Clerk
   - 2025-09-25: Fixed demoAuth.ts to not depend on generateUserJWT function
   - 2025-09-25: Successfully resolved build errors related to missing Supabase auth imports
+- [x] Clerk + Supabase user registration — fullstack — high — 2025-09-25
+  - 2025-09-25: Created user registration API route (/api/user/register)
+  - 2025-09-25: Updated database schema to support Clerk ID alongside Google ID
+  - 2025-09-25: Added automatic user registration when Clerk user signs up
+  - 2025-09-25: Created database migration script for existing installations
+- [x] Gmail integration with real emails — fullstack — high — 2025-09-25
+  - 2025-09-25: Created Gmail messages API route (/api/gmail/messages)
+  - 2025-09-25: Implemented Gmail API integration with pagination
+  - 2025-09-25: Added "Load More" functionality to inbox
+  - 2025-09-25: Updated inbox to fetch real Gmail messages instead of demo data
+  - 2025-09-25: Added fallback to demo emails if Gmail connection fails
+  - 2025-09-25: Created comprehensive setup guide (CLERK_SETUP.md)

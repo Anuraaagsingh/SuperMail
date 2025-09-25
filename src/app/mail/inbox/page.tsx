@@ -16,15 +16,19 @@ import {
   Plus,
   Menu,
   Settings,
-  User
+  User,
+  Loader2
 } from 'lucide-react';
 
 interface Email {
   id: string;
+  threadId?: string;
   from: string;
+  to?: string;
   subject: string;
   snippet: string;
-  time: string;
+  date: string;
+  body?: string;
   isRead: boolean;
   isStarred: boolean;
   labels: string[];
@@ -35,51 +39,102 @@ export default function InboxPage() {
   const router = useRouter();
   const [showSettings, setShowSettings] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [emails, setEmails] = useState<Email[]>([]);
+  const [isLoadingEmails, setIsLoadingEmails] = useState(false);
+  const [nextPageToken, setNextPageToken] = useState<string | null>(null);
+  const [hasMoreEmails, setHasMoreEmails] = useState(true);
+  const [isRegistering, setIsRegistering] = useState(false);
 
-  // Demo emails data
-  const [emails] = useState<Email[]>([
-    {
-      id: '1',
-      from: 'SuperMail Team',
-      subject: 'Welcome to SuperMail! This is your demo inbox.',
-      snippet: 'Welcome to SuperMail! This is your demo inbox. Feel free to explore the features of SuperMail.',
-      time: new Date().toISOString(),
-      isRead: false,
-      isStarred: false,
-      labels: ['INBOX']
-    },
-    {
-      id: '2',
-      from: 'Calendar',
-      subject: 'Meeting Reminder',
-      snippet: 'Your meeting with the Product Team is scheduled for tomorrow at 10:00 AM.',
-      time: new Date(Date.now() - 86400000).toISOString(),
-      isRead: false,
-      isStarred: true,
-      labels: ['INBOX', 'IMPORTANT']
-    },
-    {
-      id: '3',
-      from: 'Billing',
-      subject: 'Invoice #INV-2023-001',
-      snippet: 'Your invoice #INV-2023-001 for $199.99 is due in 7 days.',
-      time: new Date(Date.now() - 172800000).toISOString(),
-      isRead: true,
-      isStarred: false,
-      labels: ['INBOX']
-    },
-    {
-      id: '4',
-      from: 'Product Updates',
-      subject: 'Product Newsletter - July 2023',
-      snippet: 'Check out our latest product updates and new features.',
-      time: new Date(Date.now() - 259200000).toISOString(),
-      isRead: true,
-      isStarred: false,
-      labels: ['INBOX']
+  // Register user in Supabase when they first login
+  const registerUser = async () => {
+    if (!user || isRegistering) return;
+    
+    setIsRegistering(true);
+    try {
+      const response = await fetch('/api/user/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: user.email,
+          name: user.name,
+          avatarUrl: user.picture,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error('Failed to register user');
+      }
+    } catch (error) {
+      console.error('Error registering user:', error);
+    } finally {
+      setIsRegistering(false);
     }
-  ]);
+  };
 
+  // Fetch Gmail messages
+  const fetchEmails = async (pageToken?: string, append = false) => {
+    setIsLoadingEmails(true);
+    try {
+      const url = new URL('/api/gmail/messages', window.location.origin);
+      if (pageToken) {
+        url.searchParams.set('pageToken', pageToken);
+      }
+      url.searchParams.set('maxResults', '10');
+
+      const response = await fetch(url.toString());
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch emails');
+      }
+
+      const data = await response.json();
+      
+      if (append) {
+        setEmails(prev => [...prev, ...data.messages]);
+      } else {
+        setEmails(data.messages);
+      }
+      
+      setNextPageToken(data.nextPageToken || null);
+      setHasMoreEmails(!!data.nextPageToken);
+    } catch (error) {
+      console.error('Error fetching emails:', error);
+      // Fallback to demo emails if Gmail fails
+      if (!append) {
+        setEmails([
+          {
+            id: 'demo-1',
+            from: 'SuperMail Team',
+            subject: 'Welcome to SuperMail!',
+            snippet: 'This is a demo email. Connect your Gmail account to see real emails.',
+            date: new Date().toISOString(),
+            isRead: false,
+            isStarred: false,
+            labels: ['INBOX']
+          }
+        ]);
+      }
+    } finally {
+      setIsLoadingEmails(false);
+    }
+  };
+
+  // Load more emails
+  const loadMoreEmails = () => {
+    if (nextPageToken && !isLoadingEmails) {
+      fetchEmails(nextPageToken, true);
+    }
+  };
+
+  // Initial load
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      registerUser();
+      fetchEmails();
+    }
+  }, [isAuthenticated, user]);
 
   // Redirect to login if not authenticated
   if (!isLoading && !isAuthenticated) {
@@ -87,10 +142,15 @@ export default function InboxPage() {
     return null;
   }
 
-  if (isLoading) {
+  if (isLoading || isRegistering) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-slate-600 dark:text-slate-400">
+            {isRegistering ? 'Setting up your account...' : 'Loading...'}
+          </p>
+        </div>
       </div>
     );
   }
@@ -170,10 +230,42 @@ export default function InboxPage() {
         {/* Email List */}
         <div className="flex-1 overflow-auto p-4 sm:p-6">
           <div className="max-w-4xl mx-auto">
-            <EmailList 
-              emails={filteredEmails} 
-              onEmailClick={handleEmailClick}
-            />
+            {isLoadingEmails && emails.length === 0 ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
+                  <p className="text-slate-600 dark:text-slate-400">Loading your emails...</p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <EmailList 
+                  emails={filteredEmails} 
+                  onEmailClick={handleEmailClick}
+                />
+                
+                {/* Load More Button */}
+                {hasMoreEmails && (
+                  <div className="flex justify-center mt-6">
+                    <Button
+                      onClick={loadMoreEmails}
+                      disabled={isLoadingEmails}
+                      variant="outline"
+                      className="border-slate-200 dark:border-slate-700"
+                    >
+                      {isLoadingEmails ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Loading...
+                        </>
+                      ) : (
+                        'Load More'
+                      )}
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>
