@@ -8,7 +8,7 @@ import { useKeyboardShortcuts } from '@supermail/hooks/useKeyboardShortcuts';
 import { SearchBar } from '@supermail/components/SearchBar';
 import { useAuth } from '@supermail/hooks/useAuth';
 import { FlowbiteSidebar } from '@supermail/components/FlowbiteSidebar';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Mail, RefreshCw, Plus, Settings } from 'lucide-react';
 
 interface MailLayoutContentProps {
   children: ReactNode;
@@ -48,33 +48,52 @@ export function MailLayoutContent({ children }: MailLayoutContentProps) {
       />
       
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Modern Header */}
-        <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 px-6 py-4">
+      <div className="flex-1 flex flex-col overflow-hidden bg-gray-50 dark:bg-gray-900">
+        {/* MasterMail Header */}
+        <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
           <div className="flex items-center justify-between">
+            {/* Logo and Search */}
+            <div className="flex items-center space-x-6">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
+                  <Mail className="w-5 h-5 text-white" />
+                </div>
+                <h1 className="text-xl font-bold text-gray-900 dark:text-white">MasterMail</h1>
+              </div>
+              
             <div className="flex-1 max-w-2xl">
               <SearchBar 
-                placeholder="Search emails..." 
+                  placeholder="Search emails... (⌘K for more)" 
                 className="w-full"
               />
+              </div>
             </div>
             
-            <div className="flex items-center space-x-4 ml-6">
+            {/* Right side actions */}
+            <div className="flex items-center space-x-4">
+              <Button variant="ghost" size="sm" className="text-gray-600 dark:text-gray-400">
+                <RefreshCw className="w-4 h-4" />
+              </Button>
+              <Button variant="ghost" size="sm" className="text-gray-600 dark:text-gray-400">
+                <Plus className="w-4 h-4" />
+              </Button>
+              <Button variant="ghost" size="sm" className="text-gray-600 dark:text-gray-400">
+                <Settings className="w-4 h-4" />
+              </Button>
+              
+              {/* User Menu */}
               {user && (
                 <div className="flex items-center space-x-3">
                   <div className="text-right">
-                    <p className="text-sm font-medium text-slate-900 dark:text-white">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
                       {user.name}
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
                       {user.email}
                     </p>
                   </div>
-                  <div 
-                    className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-sm font-medium text-white shadow-lg"
-                    style={{ backgroundImage: user.picture ? `url(${user.picture})` : 'none' }}
-                  >
-                    {!user.picture && user.name?.charAt(0)}
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-sm font-medium text-white">
+                    {user.name?.charAt(0)}
                   </div>
                 </div>
               )}

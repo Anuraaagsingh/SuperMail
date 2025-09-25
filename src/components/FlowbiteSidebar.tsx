@@ -29,12 +29,26 @@ export function FlowbiteSidebar({ isOpen, onToggle }: FlowbiteSidebarProps) {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
 
   const navigation = [
-    { name: 'Dashboard', href: '/mail/inbox', icon: LayoutDashboard },
-    { name: 'Inbox', href: '/mail/inbox', icon: Inbox },
-    { name: 'Starred', href: '/mail/starred', icon: Star },
+    { name: 'Inbox', href: '/mail/inbox', icon: Inbox, count: 12 },
+    { name: 'Starred', href: '/mail/starred', icon: Star, count: 3 },
     { name: 'Sent', href: '/mail/sent', icon: Send },
-    { name: 'Snoozed', href: '/mail/snoozed', icon: Clock },
-    { name: 'Drafts', href: '/mail/drafts', icon: FileText },
+    { name: 'Drafts', href: '/mail/drafts', icon: FileText, count: 2 },
+    { name: 'Snoozed', href: '/mail/snoozed', icon: Clock, count: 1 },
+    { name: 'Scheduled', href: '/mail/scheduled', icon: Clock },
+    { name: 'Archive', href: '/mail/archive', icon: FileText },
+    { name: 'Spam', href: '/mail/spam', icon: FileText },
+    { name: 'Trash', href: '/mail/trash', icon: FileText },
+  ];
+
+  const splits = [
+    { name: 'Primary', href: '/mail/primary', count: 8, color: 'bg-blue-500' },
+    { name: 'Social', href: '/mail/social', count: 2, color: 'bg-green-500' },
+    { name: 'Updates', href: '/mail/updates', count: 2, color: 'bg-yellow-500' },
+  ];
+
+  const other = [
+    { name: 'Team', href: '/mail/team', icon: User },
+    { name: 'Work', href: '/mail/work', icon: FileText },
   ];
 
   const isActive = (href: string) => {
@@ -62,31 +76,20 @@ export function FlowbiteSidebar({ isOpen, onToggle }: FlowbiteSidebarProps) {
         `}
         aria-label="Sidebar"
       >
-        <div className="h-full px-3 py-4 overflow-y-auto bg-gray-50 dark:bg-gray-800">
+        <div className="h-full px-3 py-4 overflow-y-auto bg-gray-900 text-white">
           {/* Logo */}
           <div className="flex items-center mb-8">
             <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center mr-3">
               <Mail className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">SuperMail</h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Modern Email Client</p>
+              <h1 className="text-xl font-bold text-white">MasterMail</h1>
+              <p className="text-xs text-gray-400">Built for Speed</p>
             </div>
           </div>
 
-          {/* Compose Button */}
-          <div className="mb-6">
-            <ComposeButton 
-              onClick={() => {
-                // TODO: Navigate to compose
-                window.location.href = '/mail/compose';
-              }}
-              className="w-full"
-            />
-          </div>
-
-          {/* Navigation */}
-          <ul className="space-y-2 font-medium">
+          {/* Main Navigation */}
+          <ul className="space-y-1 font-medium mb-6">
             {navigation.map((item) => {
               const Icon = item.icon;
               return (
@@ -94,12 +97,68 @@ export function FlowbiteSidebar({ isOpen, onToggle }: FlowbiteSidebarProps) {
                   <Link
                     href={item.href}
                     className={`
-                      flex items-center p-2 rounded-lg transition-colors duration-200
+                      flex items-center justify-between p-2 rounded-lg transition-colors duration-200
                       ${isActive(item.href)
-                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
-                        : 'text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700'
+                        ? 'bg-gray-700 text-white'
+                        : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                       }
                     `}
+                  >
+                    <div className="flex items-center">
+                      <Icon className="w-5 h-5 mr-3" />
+                      <span>{item.name}</span>
+                    </div>
+                    {item.count && (
+                      <span className="text-xs bg-gray-600 text-gray-300 px-2 py-1 rounded-full">
+                        {item.count}
+                      </span>
+                    )}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+
+          {/* SPLITS Section */}
+          <div className="mb-6">
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-2">
+              SPLITS
+            </h3>
+            <ul className="space-y-1">
+              {splits.map((item) => (
+                <li key={item.name}>
+                  <Link
+                    href={item.href}
+                    className={`
+                      flex items-center justify-between p-2 rounded-lg transition-colors duration-200
+                      ${isActive(item.href)
+                        ? 'bg-gray-700 text-white'
+                        : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                      }
+                    `}
+                  >
+                    <div className="flex items-center">
+                      <div className={`w-2 h-2 rounded-full ${item.color} mr-3`}></div>
+                      <span>{item.name}</span>
+                    </div>
+                    <span className="text-xs bg-gray-600 text-gray-300 px-2 py-1 rounded-full">
+                      {item.count}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Other Section */}
+          <ul className="space-y-1 mb-6">
+            {other.map((item) => {
+              const Icon = item.icon;
+              return (
+                <li key={item.name}>
+                  <Link
+                    href={item.href}
+                    className="flex items-center p-2 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors duration-200"
                   >
                     <Icon className="w-5 h-5 mr-3" />
                     <span>{item.name}</span>
@@ -109,52 +168,15 @@ export function FlowbiteSidebar({ isOpen, onToggle }: FlowbiteSidebarProps) {
             })}
           </ul>
 
-          {/* Labels Section */}
-          <div className="mt-8">
-            <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
-              Labels
-            </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">No labels yet</p>
-          </div>
-
-          {/* Profile Section */}
+          {/* Settings Button */}
           <div className="mt-auto pt-6">
-            <div className="relative">
-              <button
-                onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-                className="flex items-center w-full p-2 text-gray-900 rounded-lg hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
-              >
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center mr-3">
-                  <User className="w-4 h-4 text-white" />
-                </div>
-                <div className="flex-1 text-left">
-                  <p className="text-sm font-medium">John Doe</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">john@example.com</p>
-                </div>
-                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showProfileDropdown ? 'rotate-180' : ''}`} />
-              </button>
-
-              {/* Profile Dropdown */}
-              {showProfileDropdown && (
-                <div className="absolute bottom-full left-0 right-0 mb-2 bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600">
-                  <div className="py-2">
-                    <button className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600">
-                      <Settings className="w-4 h-4 mr-3" />
-                      Settings
-                    </button>
-                    <button className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600">
-                      <User className="w-4 h-4 mr-3" />
-                      Profile
-                    </button>
-                    <hr className="my-2 border-gray-200 dark:border-gray-600" />
-                    <button className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
-                      <LogOut className="w-4 h-4 mr-3" />
-                      Sign out
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
+            <Link
+              href="/settings"
+              className="flex items-center p-2 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors duration-200"
+            >
+              <Settings className="w-5 h-5 mr-3" />
+              <span>Settings</span>
+            </Link>
           </div>
         </div>
       </aside>

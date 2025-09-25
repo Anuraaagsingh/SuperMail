@@ -181,123 +181,111 @@ export default function InboxPage() {
   );
 
   return (
-    <div className="h-full">
-      {/* Main Content */}
-      <div className="flex flex-col h-full">
-        {/* Header */}
-        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-700/50 px-4 sm:px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Inbox</h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400">All your emails in one place</p>
-            </div>
-
-            <div className="flex items-center gap-2 sm:gap-3">
-              <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hidden sm:inline-flex">
-                All emails
-              </Badge>
-              
-              <ComposeButton
-                onClick={() => {
-                  // TODO: Implement Gmail connection flow
-                  alert('Gmail connection coming soon!');
-                }}
-                className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
-              >
-                <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-.904.732-1.636 1.636-1.636h3.819v9.273L12 8.183l6.545 4.91V3.82h3.819c.904 0 1.636.732 1.636 1.636z"/>
-                </svg>
-                Connect Gmail
-              </ComposeButton>
-              
-              <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                <User className="w-4 h-4" />
-                <span>{user?.name || 'Demo User'}</span>
+    <div className="h-full flex">
+      {/* Email List Panel */}
+      <div className="w-1/2 border-r border-gray-200 dark:border-gray-700">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Inbox</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{emails.length} emails</p>
+        </div>
+        
+        <div className="flex-1 overflow-auto">
+          {isLoadingEmails && emails.length === 0 ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <CustomLoader size="lg" className="mx-auto mb-4" />
+                <p className="text-gray-600 dark:text-gray-400">Loading your emails...</p>
               </div>
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowSettings(true)}
-                className="w-8 h-8 p-0"
-              >
-                <Settings className="w-4 h-4" />
-              </Button>
             </div>
-          </div>
-        </div>
-
-        {/* Search and Filters */}
-        <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm border-b border-slate-200/50 dark:border-slate-700/50 px-4 sm:px-6 py-4">
-          <div className="flex items-center gap-2 sm:gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <Input
-                placeholder="Search emails..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-white/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
-              />
+          ) : emails.length === 0 ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <p className="text-gray-500 dark:text-gray-400">No emails found. Your inbox is empty or try a different search.</p>
+              </div>
             </div>
-            
-            <Button variant="outline" size="sm" className="border-slate-200 dark:border-slate-700 hidden sm:flex">
-              <Filter className="w-4 h-4 mr-2" />
-              Filter
-            </Button>
-            
-            <Button variant="outline" size="sm" className="border-slate-200 dark:border-slate-700">
-              <RefreshCw className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Email List */}
-        <div className="flex-1 overflow-auto p-4 sm:p-6">
-          <div className="max-w-4xl mx-auto">
-                {isLoadingEmails && emails.length === 0 ? (
-                  <div className="flex items-center justify-center py-12">
-                    <div className="text-center">
-                      <CustomLoader size="lg" className="mx-auto mb-4" />
-                      <p className="text-slate-600 dark:text-slate-400">Loading your emails...</p>
+          ) : (
+            <div className="divide-y divide-gray-200 dark:divide-gray-700">
+              {filteredEmails.map((email) => (
+                <div
+                  key={email.id}
+                  onClick={() => handleEmailClick(email)}
+                  className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors"
+                >
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0">
+                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                        {email.from.charAt(0).toUpperCase()}
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                          {email.from}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {new Date(email.date).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <p className="text-sm text-gray-900 dark:text-white font-medium mt-1">
+                        {email.subject}
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
+                        {email.snippet}
+                      </p>
                     </div>
                   </div>
+                </div>
+              ))}
+            </div>
+          )}
+          
+          {/* Load More Button */}
+          {hasMoreEmails && (
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+              <Button
+                onClick={loadMoreEmails}
+                disabled={isLoadingEmails}
+                variant="outline"
+                className="w-full"
+              >
+                {isLoadingEmails ? (
+                  <>
+                    <CustomLoader size="sm" className="mr-2" />
+                    Loading...
+                  </>
                 ) : (
-              <>
-                <EmailList 
-                  emails={filteredEmails} 
-                  onEmailClick={handleEmailClick}
-                />
-                
-                {/* Load More Button */}
-                {hasMoreEmails && (
-                  <div className="flex justify-center mt-6">
-                        <Button
-                          onClick={loadMoreEmails}
-                          disabled={isLoadingEmails}
-                          variant="outline"
-                          className="border-slate-200 dark:border-slate-700"
-                        >
-                          {isLoadingEmails ? (
-                            <>
-                              <CustomLoader size="sm" className="mr-2" />
-                              Loading...
-                            </>
-                          ) : (
-                            'Load More'
-                          )}
-                        </Button>
-                  </div>
+                  'Load More'
                 )}
-              </>
-            )}
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Email Content Panel */}
+      <div className="w-1/2">
+        <div className="h-full flex items-center justify-center bg-gray-50 dark:bg-gray-800">
+          <div className="text-center">
+            <Mail className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+              No message selected
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400 mb-6">
+              Choose an email from the list to read it
+            </p>
+            <div className="space-y-2 text-sm text-gray-500 dark:text-gray-400">
+              <p>Press C to compose</p>
+              <p>Press ⌘K for commands</p>
+              <p>Press ? for help</p>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Settings Overlay */}
-      <SettingsOverlay 
-        isOpen={showSettings} 
-        onClose={() => setShowSettings(false)} 
+      <SettingsOverlay
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
       />
     </div>
   );
