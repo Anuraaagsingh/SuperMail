@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth as useClerkAuth, useUser } from '@clerk/nextjs';
 
 interface User {
   id: string;
@@ -22,61 +23,31 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const { isLoaded, isSignedIn, signOut } = useClerkAuth();
+  const { user: clerkUser } = useUser();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    // Check for existing auth on mount
-    const checkAuth = () => {
-      const token = localStorage.getItem('authToken');
-      const storedUser = localStorage.getItem('user');
-      
-      if (token && storedUser) {
-        try {
-          setUser(JSON.parse(storedUser));
-        } catch (e) {
-          console.error('Failed to parse user data', e);
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('user');
-        }
+    if (isLoaded) {
+      if (isSignedIn && clerkUser) {
+        setUser({
+          id: clerkUser.id,
+          email: clerkUser.emailAddresses[0]?.emailAddress || '',
+          name: clerkUser.fullName || '',
+          picture: clerkUser.imageUrl,
+        });
+      } else {
+        setUser(null);
       }
-      
       setIsLoading(false);
-    };
-    
-    checkAuth();
-  }, []);
+    }
+  }, [isLoaded, isSignedIn, clerkUser]);
 
   const login = async (code: string, redirectUri: string) => {
-    setIsLoading(true);
-    
-    try {
-      const response = await fetch('/api/auth/google', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ code, redirectUri }),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Authentication failed');
-      }
-      
-      const data = await response.json();
-      
-      localStorage.setItem('authToken', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      
-      setUser(data.user);
-      setIsLoading(false);
-    } catch (error) {
-      console.error('Login error:', error);
-      setIsLoading(false);
-      throw error;
-    }
+    // This method is no longer needed with Clerk
+    throw new Error('Use Clerk authentication components instead');
   };
 
   const loginWithDemo = async () => {
@@ -99,10 +70,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
-    setUser(null);
+  const logout = async () => {
+    if (isSignedIn) {
+      await signOut();
+    } else {
+      // Fallback for demo users
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('user');
+      setUser(null);
+    }
     router.push('/');
   };
 

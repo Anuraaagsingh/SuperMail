@@ -1,13 +1,9 @@
 import { createSupabaseServerClient } from './supabase';
 import CryptoJS from 'crypto-js';
-import { SignJWT, jwtVerify } from 'jose';
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
 const JWT_SECRET = process.env.supermail_SUPABASE_JWT_SECRET || process.env.SUPABASE_JWT_SECRET || process.env.JWT_SECRET || 'fallback-jwt-secret-for-development-only';
-
-// Create a secret key for JWT
-const secret = new TextEncoder().encode(JWT_SECRET);
 
 // Required Gmail API scopes
 export const GMAIL_SCOPES = [
@@ -30,60 +26,6 @@ export const decryptToken = (encryptedToken: string): string => {
   return bytes.toString(CryptoJS.enc.Utf8);
 };
 
-// Generate a JWT for the user (browser-compatible)
-export const generateUserJWT = async (userId: string): Promise<string> => {
-  const jwt = await new SignJWT({ sub: userId })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setIssuedAt()
-    .setExpirationTime('7d')
-    .sign(secret);
-  
-  return jwt;
-};
-
-// Verify a JWT and return the user ID (browser-compatible)
-export const verifyUserJWT = async (token: string): Promise<string | null> => {
-  try {
-    const { payload } = await jwtVerify(token, secret);
-    return payload.sub as string;
-  } catch (error) {
-    console.error('JWT verification failed:', error);
-    return null;
-  }
-};
-
-// Exchange authorization code for tokens
-export const exchangeCodeForTokens = async (code: string, redirectUri: string) => {
-  const tokenUrl = 'https://oauth2.googleapis.com/token';
-  
-  const params = new URLSearchParams({
-    code,
-    client_id: GOOGLE_CLIENT_ID,
-    client_secret: GOOGLE_CLIENT_SECRET,
-    redirect_uri: redirectUri,
-    grant_type: 'authorization_code',
-  });
-
-  try {
-    const response = await fetch(tokenUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: params.toString(),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Failed to exchange code: ${errorText}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Error exchanging code for tokens:', error);
-    throw error;
-  }
-};
 
 // Refresh access token using refresh token
 export const refreshAccessToken = async (refreshToken: string) => {
@@ -117,97 +59,7 @@ export const refreshAccessToken = async (refreshToken: string) => {
   }
 };
 
-// Get user profile from Google
-export const getUserProfile = async (accessToken: string) => {
-  try {
-    const response = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch user profile');
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Error fetching user profile:', error);
-    throw error;
-  }
-};
-
-// Store user and token in Supabase
-export const storeUserAndToken = async (
-  profile: any, 
-  refreshToken: string, 
-  accessToken: string, 
-  expiresAt: Date
-) => {
-  const supabase = createSupabaseServerClient();
-  
-  // Encrypt refresh token
-  const encryptedRefreshToken = encryptToken(refreshToken);
-  
-  // Check if user exists
-  const { data: existingUser } = await supabase
-    .from('users')
-    .select('id')
-    .eq('google_id', profile.id)
-    .single();
-  
-  let userId;
-  
-  if (existingUser) {
-    // Update existing user
-    userId = existingUser.id;
-    await supabase
-      .from('users')
-      .update({
-        email: profile.email,
-        name: profile.name,
-        avatar_url: profile.picture,
-      })
-      .eq('id', userId);
-  } else {
-    // Create new user
-    const { data: newUser, error } = await supabase
-      .from('users')
-      .insert({
-        email: profile.email,
-        google_id: profile.id,
-        name: profile.name,
-        avatar_url: profile.picture,
-        settings: {},
-      })
-      .select('id')
-      .single();
-    
-    if (error || !newUser) {
-      throw new Error(`Failed to create user: ${error?.message}`);
-    }
-    
-    userId = newUser.id;
-  }
-  
-  // Store token
-  const { error: tokenError } = await supabase
-    .from('tokens')
-    .upsert({
-      user_id: userId,
-      encrypted_refresh_token: encryptedRefreshToken,
-      access_token: accessToken,
-      expires_at: expiresAt.toISOString(),
-    }, {
-      onConflict: 'user_id',
-    });
-  
-  if (tokenError) {
-    throw new Error(`Failed to store token: ${tokenError.message}`);
-  }
-  
-  return userId;
-};
 
 // Get valid access token for a user
 export const getValidAccessToken = async (userId: string) => {

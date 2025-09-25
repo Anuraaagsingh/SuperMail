@@ -1,25 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@supermail/lib/supabase';
 import { getValidAccessToken } from '@supermail/lib/auth';
+import { auth } from '@clerk/nextjs/server';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
-    // Get auth token from request
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    // Get user from Clerk auth
+    const { userId } = await auth();
     
-    const token = authHeader.split(' ')[1];
-    
-    // Verify token and get user ID
-    const supabase = createSupabaseServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
-    if (authError || !user) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
@@ -43,7 +35,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Get Gmail access token
-    const accessToken = await getValidAccessToken(user.id);
+    const accessToken = await getValidAccessToken(userId);
     
     // Restore original labels
     const originalLabels = snooze.original_labels || [];

@@ -2,46 +2,26 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createSupabaseClient } from '@supermail/lib/supabase';
+import { useAuth } from '@clerk/nextjs';
 
 export default function AuthCallbackPage() {
   const router = useRouter();
+  const { isLoaded, isSignedIn } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const handleAuthCallback = async () => {
-      try {
-        const supabase = createSupabaseClient();
-        
-        // Get the session from the URL
-        const { data, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Error in auth callback:', error);
-          setError(error.message);
-          setIsLoading(false);
-          return;
-        }
-
-        if (data.session) {
-          console.log('Auth callback successful:', data.session.user.email);
-          // The auth state change will be handled by the SupabaseAuthProvider
-          // and will redirect to /mail/inbox automatically
-        } else {
-          console.error('No session found in callback');
-          setError('Authentication failed');
-          setIsLoading(false);
-        }
-      } catch (err) {
-        console.error('Error in handleAuthCallback:', err);
+    if (isLoaded) {
+      if (isSignedIn) {
+        console.log('Auth callback successful - user is signed in');
+        router.push('/mail/inbox');
+      } else {
+        console.error('No user found in callback');
         setError('Authentication failed');
         setIsLoading(false);
       }
-    };
-
-    handleAuthCallback();
-  }, [router]);
+    }
+  }, [isLoaded, isSignedIn, router]);
 
   if (error) {
     return (

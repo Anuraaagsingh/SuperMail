@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createGmailClient } from '@/lib/gmail';
-import { verifyUserJWT } from '@/lib/auth';
+import { auth } from '@clerk/nextjs/server';
 import { createSupabaseServerClient } from '@/lib/supabase';
 
 // Force dynamic rendering
@@ -8,17 +8,11 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
-    // Get auth token from header
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    
-    const token = authHeader.split(' ')[1];
-    const userId = verifyUserJWT(token);
+    // Get user from Clerk auth
+    const { userId } = await auth();
     
     if (!userId) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
     // Get request body

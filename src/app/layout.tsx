@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import { AuthProvider } from '@supermail/hooks/useAuth';
-import { SupabaseAuthProvider } from '@supermail/hooks/useSupabaseAuth';
+import { ClerkProvider } from '@clerk/nextjs';
 import { ThemeProvider } from '@supermail/hooks/useTheme';
+import { AuthProvider } from '@supermail/hooks/useAuth';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -18,18 +18,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
-        <ThemeProvider>
-          <SupabaseAuthProvider>
+    <ClerkProvider>
+      <html lang="en" suppressHydrationWarning>
+        <body className={inter.className}>
+          <ThemeProvider>
             <AuthProvider>
               <div className="relative min-h-screen flex flex-col">
                 {children}
               </div>
             </AuthProvider>
-          </SupabaseAuthProvider>
-        </ThemeProvider>
-      </body>
-    </html>
+          </ThemeProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
