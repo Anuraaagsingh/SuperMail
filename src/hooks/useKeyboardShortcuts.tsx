@@ -9,6 +9,7 @@ interface KeyboardShortcutsOptions {
   enableThreadShortcuts?: boolean;
   onOpenCommandPalette?: () => void;
   onOpenShortcutsDialog?: () => void;
+  onCompose?: () => void;
 }
 
 export function useKeyboardShortcuts({
@@ -17,6 +18,7 @@ export function useKeyboardShortcuts({
   enableThreadShortcuts = false,
   onOpenCommandPalette,
   onOpenShortcutsDialog,
+  onCompose,
 }: KeyboardShortcutsOptions = {}) {
   const router = useRouter();
   const [keys, setKeys] = useState<string[]>([]);
@@ -85,7 +87,11 @@ export function useKeyboardShortcuts({
           switch (key) {
             case 'c':
               e.preventDefault();
-              router.push('/mail/compose');
+              if (onCompose) {
+                onCompose();
+              } else {
+                router.push('/mail/compose');
+              }
               break;
             case ',':
               e.preventDefault();

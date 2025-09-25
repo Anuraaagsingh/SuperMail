@@ -8,6 +8,7 @@ import { useAuth } from '@supermail/hooks/useAuth';
 import { Sidebar } from '@supermail/components/Sidebar';
 import { ThemeToggle } from '@supermail/components/theme-toggle';
 import { SettingsOverlay } from '@supermail/components/SettingsOverlay';
+import { ComposeModal } from '@supermail/components/ComposeModal';
 import { Button } from '@supermail/components/ui/button';
 import { Menu, X, Mail, RefreshCw, Plus, Settings, Search } from 'lucide-react';
 
@@ -21,17 +22,19 @@ export function MailLayoutContent({ children }: MailLayoutContentProps) {
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showCompose, setShowCompose] = useState(false);
 
   useKeyboardShortcuts({
     onCommandPalette: () => setShowCommandPalette(true),
     onKeyboardShortcuts: () => setShowKeyboardShortcuts(true),
+    onCompose: () => setShowCompose(true),
   });
 
   return (
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
       <div className="hidden lg:flex lg:flex-shrink-0">
-        <Sidebar />
+        <Sidebar onCompose={() => setShowCompose(true)} />
       </div>
 
       {/* Mobile Sidebar Overlay */}
@@ -39,7 +42,7 @@ export function MailLayoutContent({ children }: MailLayoutContentProps) {
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="fixed inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />
           <div className="fixed left-0 top-0 h-full w-64">
-            <Sidebar />
+            <Sidebar onCompose={() => setShowCompose(true)} />
           </div>
         </div>
       )}
@@ -134,6 +137,12 @@ export function MailLayoutContent({ children }: MailLayoutContentProps) {
       <SettingsOverlay
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
+      />
+
+      {/* Compose Modal */}
+      <ComposeModal
+        isOpen={showCompose}
+        onClose={() => setShowCompose(false)}
       />
     </div>
   );

@@ -23,9 +23,10 @@ import {
 
 interface SidebarProps {
   className?: string;
+  onCompose?: () => void;
 }
 
-export function Sidebar({ className }: SidebarProps) {
+export function Sidebar({ className, onCompose }: SidebarProps) {
   const pathname = usePathname();
 
   const navigation = [
@@ -70,6 +71,16 @@ export function Sidebar({ className }: SidebarProps) {
             <p className="text-xs text-muted-foreground">Built for Speed</p>
           </div>
         </div>
+      </div>
+
+      {/* Compose Button */}
+      <div className="px-3 py-4">
+        <Button
+          onClick={onCompose}
+          className="w-full bg-foreground text-background hover:bg-foreground/90 dark:bg-background dark:text-foreground dark:hover:bg-background/90"
+        >
+          + New Mail
+        </Button>
       </div>
 
       {/* Navigation */}
