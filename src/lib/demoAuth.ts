@@ -1,5 +1,4 @@
 // Demo authentication service
-import { generateUserJWT } from './auth';
 
 // Demo user data
 export const DEMO_USER = {
@@ -152,8 +151,8 @@ export const DEMO_EMAILS = [
 
 // Demo auth function
 export async function loginWithDemo(): Promise<{ token: string; user: typeof DEMO_USER }> {
-  // Generate a JWT for the demo user
-  const token = await generateUserJWT(DEMO_USER.id);
+  // Generate a simple demo token (not a real JWT since we're using Clerk for real auth)
+  const token = `demo-token-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   
   // Simulate network delay
   await new Promise(resolve => setTimeout(resolve, 800));

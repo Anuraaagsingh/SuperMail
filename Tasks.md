@@ -13,7 +13,8 @@
 - [ ] Optimize performance for large mailboxes — fullstack — high — 2025-09-22
 
 ## In Progress
-- [ ] (empty)
+- [ ] Setup Clerk environment variables — devops — high — 2025-09-25
+  - Need to create .env.local with Clerk keys from https://dashboard.clerk.com
 
 ## Review
 - [ ] (empty)
@@ -62,3 +63,16 @@
   - 2025-01-24: Removed @supabase/auth-helpers-nextjs and @supabase/auth-helpers-shared
   - 2025-01-24: Updated to latest @supabase/ssr and @supabase/supabase-js packages
   - 2025-01-24: Eliminated deprecated package warnings in build logs
+- [x] Clerk Next.js integration — fullstack — high — 2025-09-25
+  - 2025-09-25: Installed @clerk/nextjs SDK
+  - 2025-09-25: Updated middleware to use clerkMiddleware()
+  - 2025-09-25: Wrapped app with ClerkProvider in layout.tsx
+  - 2025-09-25: Updated login page with Clerk SignInButton and SignUpButton components
+  - 2025-09-25: Updated auth callback page to use Clerk's useAuth hook
+  - 2025-09-25: Updated useAuth hook to integrate with Clerk while preserving demo login
+  - 2025-09-25: Updated all API routes to use Clerk's auth() helper instead of JWT verification
+  - 2025-09-25: Cleaned up auth.ts to remove JWT functions no longer needed with Clerk
+  - 2025-09-25: Removed Supabase auth dependencies from package.json
+  - 2025-09-25: Fixed inbox page to remove Supabase auth imports and use only Clerk
+  - 2025-09-25: Fixed demoAuth.ts to not depend on generateUserJWT function
+  - 2025-09-25: Successfully resolved build errors related to missing Supabase auth imports
