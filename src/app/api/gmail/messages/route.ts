@@ -19,8 +19,37 @@ export async function GET(request: NextRequest) {
     const pageToken = searchParams.get('pageToken') || undefined;
     const maxResults = parseInt(searchParams.get('maxResults') || '10');
 
+    // Check if user has Gmail connected
+    const supabase = createSupabaseServerClient();
+    const { data: userData } = await supabase
+      .from('users')
+      .select('google_id')
+      .eq('clerk_id', userId)
+      .single();
+
+    if (!userData?.google_id) {
+      console.log('User has not connected Gmail yet');
+      return NextResponse.json({
+        messages: [],
+        nextPageToken: null,
+        resultSizeEstimate: 0,
+        message: 'Gmail not connected. Please connect your Gmail account to see real emails.'
+      });
+    }
+
     // Get user's Gmail access token
-    const accessToken = await getValidAccessToken(userId);
+    let accessToken;
+    try {
+      accessToken = await getValidAccessToken(userId);
+    } catch (error) {
+      console.error('Error getting Gmail access token:', error);
+      return NextResponse.json({
+        messages: [],
+        nextPageToken: null,
+        resultSizeEstimate: 0,
+        message: 'Gmail access token expired. Please reconnect your Gmail account.'
+      });
+    }
 
     // Fetch messages from Gmail API
     const gmailUrl = new URL('https://gmail.googleapis.com/gmail/v1/users/me/messages');
@@ -40,7 +69,10 @@ export async function GET(request: NextRequest) {
       const errorData = await response.json();
       console.error('Gmail API error:', errorData);
       return NextResponse.json(
-        { error: 'Failed to fetch messages from Gmail' },
+        { 
+          error: 'Failed to fetch messages from Gmail',
+          details: errorData.error?.message || 'Unknown Gmail API error'
+        },
         { status: 500 }
       );
     }
