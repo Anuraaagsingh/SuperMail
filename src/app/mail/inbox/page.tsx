@@ -18,7 +18,8 @@ import {
   Menu,
   Settings,
   User,
-  Loader2
+  Loader2,
+  Mail
 } from 'lucide-react';
 
 interface Email {
@@ -139,11 +140,51 @@ export default function InboxPage() {
     }
   };
 
+  // Load demo emails for demo users
+  const loadDemoEmails = async () => {
+    setIsLoadingEmails(true);
+    try {
+      const { getDemoEmails } = await import('@supermail/lib/demoAuth');
+      const result = await getDemoEmails('INBOX');
+      
+      const demoEmails: Email[] = result.messages.map((email: any) => {
+        const fromHeader = email.payload.headers.find((h: any) => h.name === 'From');
+        const subjectHeader = email.payload.headers.find((h: any) => h.name === 'Subject');
+        const dateHeader = email.payload.headers.find((h: any) => h.name === 'Date');
+        
+        return {
+          id: email.id,
+          threadId: email.threadId,
+          from: fromHeader?.value || 'Unknown',
+          subject: subjectHeader?.value || 'No Subject',
+          snippet: email.snippet,
+          date: dateHeader?.value || new Date().toISOString(),
+          isRead: false,
+          isStarred: email.labelIds.includes('STARRED'),
+          labels: email.labelIds,
+        };
+      });
+      
+      setEmails(demoEmails);
+      setHasMoreEmails(false);
+    } catch (error) {
+      console.error('Error loading demo emails:', error);
+    } finally {
+      setIsLoadingEmails(false);
+    }
+  };
+
   // Initial load
   useEffect(() => {
     if (isAuthenticated && user) {
-      registerUser();
-      fetchEmails();
+      if (user.id === 'demo-user-id') {
+        // Load demo emails for demo user
+        loadDemoEmails();
+      } else {
+        // Register real user and fetch real emails
+        registerUser();
+        fetchEmails();
+      }
     }
   }, [isAuthenticated, user]);
 
@@ -153,13 +194,25 @@ export default function InboxPage() {
     return null;
   }
 
-  if (isLoading || isRegistering) {
+  // Show loading while checking authentication
+  if (isLoading) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center">
+          <CustomLoader size="lg" className="mx-auto mb-4" />
+          <p className="text-gray-600 dark:text-gray-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isRegistering) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <CustomLoader size="lg" className="mx-auto mb-4" />
           <p className="text-slate-600 dark:text-slate-400">
-            {isRegistering ? 'Setting up your account...' : 'Loading...'}
+            Setting up your account...
           </p>
         </div>
       </div>

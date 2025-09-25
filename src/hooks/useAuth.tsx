@@ -39,7 +39,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           picture: clerkUser.imageUrl,
         });
       } else {
-        setUser(null);
+        // Check for demo user in localStorage
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          try {
+            const demoUser = JSON.parse(storedUser);
+            setUser(demoUser);
+          } catch (error) {
+            console.error('Error parsing stored user:', error);
+            localStorage.removeItem('user');
+            localStorage.removeItem('authToken');
+          }
+        } else {
+          setUser(null);
+        }
       }
       setIsLoading(false);
     }
