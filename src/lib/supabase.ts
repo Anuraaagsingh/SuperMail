@@ -15,7 +15,7 @@ export const createSupabaseClient = () => {
 };
 
 // Create a Supabase client for server usage (SSR)
-export const createSupabaseServerClient = (cookieStore: any) => {
+export const createSupabaseServerClient = (cookieStore?: any) => {
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error('Supabase environment variables not configured. Please set supermail_NEXT_PUBLIC_SUPABASE_URL and supermail_NEXT_PUBLIC_SUPABASE_ANON_KEY in your environment variables.');
   }
@@ -23,13 +23,15 @@ export const createSupabaseServerClient = (cookieStore: any) => {
   return createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
       getAll() {
-        return cookieStore.getAll();
+        return cookieStore?.getAll() || [];
       },
       setAll(cookiesToSet) {
         try {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options)
-          );
+          if (cookieStore) {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          }
         } catch {
           // The `setAll` method was called from a Server Component.
           // This can be ignored if you have middleware refreshing

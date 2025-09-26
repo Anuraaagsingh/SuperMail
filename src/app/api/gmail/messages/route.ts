@@ -71,7 +71,8 @@ export async function GET(request: NextRequest) {
         messages: [],
         nextPageToken: null,
         resultSizeEstimate: 0,
-        message: 'Gmail access token expired. Please reconnect your Gmail account.'
+        error: 'Gmail not connected',
+        message: 'Gmail not connected. Please connect your Gmail account to see real emails.'
       });
     }
 
