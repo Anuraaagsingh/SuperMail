@@ -3,187 +3,173 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@supermail/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@supermail/components/ui/card';
 import { Input } from '@supermail/components/ui/input';
-import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
-import { useAuth } from '@supermail/hooks/useAuth';
-import { getErrorMessage } from '@supermail/lib/utils';
-import { Mail, Lock, User, ArrowRight, X, Eye, EyeOff } from 'lucide-react';
+import { Label } from '@supermail/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@supermail/components/ui/card';
+import { Separator } from '@supermail/components/ui/separator';
+import { 
+  Mail, 
+  Lock, 
+  Eye, 
+  EyeOff,
+  Apple,
+  Chrome
+} from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { loginWithDemo } = useAuth();
-  const [isDemoLoading, setIsDemoLoading] = useState(false);
-  const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleDemoLogin = async () => {
-    setIsDemoLoading(true);
-    setError('');
-
+    setIsLoading(true);
     try {
-      await loginWithDemo();
+      // Simulate demo login
+      await new Promise(resolve => setTimeout(resolve, 1000));
       router.push('/mail/inbox');
     } catch (error) {
-      console.error('Demo login error:', error);
-      setError(getErrorMessage(error));
-      setIsDemoLoading(false);
+      console.error('Demo login failed:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Custom Background Animation */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-        {/* Animated circles */}
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-yellow-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-        <div className="absolute top-40 left-40 w-80 h-80 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
-        
-        {/* Floating particles */}
-        <div className="absolute inset-0">
-          {[...Array(20)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-2 h-2 bg-white/20 rounded-full animate-float"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 3}s`,
-                animationDuration: `${3 + Math.random() * 2}s`
-              }}
-            />
-          ))}
-        </div>
+      {/* Gradient Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-pink-500 via-purple-500 to-indigo-600" />
+      
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0">
+        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-pink-300/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-300/20 rounded-full blur-3xl animate-pulse delay-1000" />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-indigo-300/20 rounded-full blur-3xl animate-pulse delay-500" />
       </div>
 
-      {/* Content */}
-      <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
-        <Card className="w-full max-w-md bg-white/10 dark:bg-slate-900/20 backdrop-blur-xl border-white/20 dark:border-slate-700/30 shadow-2xl">
-          <CardHeader className="space-y-6">
-            {/* Logo */}
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <Mail className="w-8 h-8 text-white" />
+      {/* Main Content */}
+      <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
+        {/* Login Card */}
+        <Card className="w-full max-w-md bg-white/10 backdrop-blur-md border-white/20 shadow-2xl">
+          <CardHeader className="space-y-2 text-center">
+            <div className="flex items-center justify-center mb-4">
+              <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                <Mail className="h-5 w-5 text-white" />
               </div>
-              <h1 className="text-2xl font-bold text-white mb-2">SuperMail</h1>
-              <p className="text-white/70 text-sm">Modern Email Experience</p>
             </div>
-
-            <div>
-              <h2 className="text-xl font-semibold text-white mb-6">Welcome back</h2>
+            <CardTitle className="text-2xl font-bold text-white">MasterMail</CardTitle>
+            <CardDescription className="text-white/80">
+              Welcome back! Login to access your emails.
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent className="space-y-6">
+            {/* Social Login Buttons */}
+            <div className="space-y-3">
+              <Button 
+                variant="secondary" 
+                className="w-full bg-white/10 hover:bg-white/20 border-white/20 text-white"
+                onClick={handleDemoLogin}
+                disabled={isLoading}
+              >
+                <Apple className="h-4 w-4 mr-2" />
+                Login with Apple
+              </Button>
               
-              {/* Demo Login */}
-              <div className="p-4 rounded-lg bg-blue-500/20 border border-blue-400/30 mb-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                    <User className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-white text-sm">Demo Account</p>
-                    <p className="text-blue-200 text-xs">Try SuperMail with demo data</p>
-                  </div>
-                </div>
-                <Button
-                  onClick={handleDemoLogin}
-                  disabled={isDemoLoading}
-                  className="w-full bg-blue-500 hover:bg-blue-600 text-white"
-                >
-                  {isDemoLoading ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  ) : (
-                    'Sign in with Demo'
-                  )}
-                </Button>
-              </div>
+              <Button 
+                variant="secondary" 
+                className="w-full bg-white/10 hover:bg-white/20 border-white/20 text-white"
+                onClick={handleDemoLogin}
+                disabled={isLoading}
+              >
+                <Chrome className="h-4 w-4 mr-2" />
+                Login with Google
+              </Button>
+            </div>
 
-              {/* Clerk Sign In */}
-              <div className="p-4 rounded-lg bg-green-500/20 border border-green-400/30">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-                    <Mail className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-white text-sm">Sign In</p>
-                    <p className="text-green-200 text-xs">Access your account</p>
-                  </div>
-                </div>
-                <SignInButton
-                  mode="modal"
-                  fallbackRedirectUrl="/mail/inbox"
-                >
-                  <Button className="w-full bg-green-500 hover:bg-green-600 text-white">
-                    Sign in with Clerk
-                  </Button>
-                </SignInButton>
-                <p className="text-xs text-green-200/70 mt-2">
-                  Secure authentication powered by Clerk.
-                </p>
+            {/* Separator */}
+            <div className="relative">
+              <Separator className="bg-white/20" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="bg-transparent px-2 text-sm text-white/60">Or continue with</span>
               </div>
             </div>
 
-            {/* Error Message */}
-            {error && (
-              <div className="p-4 rounded-lg bg-red-500/20 border border-red-400/30 text-red-200 text-sm">
-                {error}
+            {/* Email/Password Form */}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-white">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/60" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="m@example.com"
+                    className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:border-white/40"
+                  />
+                </div>
               </div>
-            )}
 
-            {/* Terms */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="text-white">Password</Label>
+                  <button className="text-sm text-white/80 hover:text-white transition-colors">
+                    Forgot your password?
+                  </button>
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/60" />
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter your password"
+                    className="pl-10 pr-10 bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:border-white/40"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-white transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <Button 
+                className="w-full bg-white text-gray-900 hover:bg-white/90 font-medium"
+                onClick={handleDemoLogin}
+                disabled={isLoading}
+              >
+                {isLoading ? 'Signing in...' : 'Login'}
+              </Button>
+            </div>
+
+            {/* Sign Up Link */}
             <div className="text-center">
-              <p className="text-xs text-white/60">
-                By creating an account, you agree to our{' '}
-                <a href="#" className="text-white/80 hover:text-white underline">
-                  Terms & Service
-                </a>
+              <p className="text-white/80">
+                Don't have an account?{' '}
+                <button className="text-white hover:underline font-medium">
+                  Sign up
+                </button>
               </p>
             </div>
-          </CardHeader>
+
+            {/* Legal Text */}
+            <div className="text-center">
+              <p className="text-xs text-white/60">
+                By clicking continue, you agree to our{' '}
+                <button className="text-white/80 hover:text-white underline">
+                  Terms of Service
+                </button>{' '}
+                and{' '}
+                <button className="text-white/80 hover:text-white underline">
+                  Privacy Policy
+                </button>
+                .
+              </p>
+            </div>
+          </CardContent>
         </Card>
       </div>
-
-      {/* Custom Animations */}
-      <style jsx>{`
-        @keyframes blob {
-          0% {
-            transform: translate(0px, 0px) scale(1);
-          }
-          33% {
-            transform: translate(30px, -50px) scale(1.1);
-          }
-          66% {
-            transform: translate(-20px, 20px) scale(0.9);
-          }
-          100% {
-            transform: translate(0px, 0px) scale(1);
-          }
-        }
-        
-        @keyframes float {
-          0%, 100% {
-            transform: translateY(0px);
-          }
-          50% {
-            transform: translateY(-20px);
-          }
-        }
-        
-        .animate-blob {
-          animation: blob 7s infinite;
-        }
-        
-        .animate-float {
-          animation: float 3s ease-in-out infinite;
-        }
-        
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-        
-        .animation-delay-4000 {
-          animation-delay: 4s;
-        }
-      `}</style>
     </div>
   );
 }
