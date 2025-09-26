@@ -78,6 +78,11 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await response.json();
+    console.log('Gmail API response:', { 
+      messageCount: data.messages?.length || 0, 
+      hasMessages: !!data.messages,
+      nextPageToken: data.nextPageToken 
+    });
 
     // Fetch detailed message data for each message
     const messages = await Promise.all(

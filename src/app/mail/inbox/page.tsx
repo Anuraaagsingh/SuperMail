@@ -99,7 +99,13 @@ export default function InboxPage() {
       const response = await fetch(`/api/gmail/messages?${params.toString()}`);
       const data = await response.json();
       
-      if (data.success) {
+      console.log('Frontend received data:', { 
+        hasMessages: !!data.messages, 
+        messageCount: data.messages?.length || 0,
+        data: data 
+      });
+      
+      if (data.messages && Array.isArray(data.messages)) {
         const newEmails: Email[] = data.messages.map((msg: any) => ({
           id: msg.id,
           threadId: msg.threadId,

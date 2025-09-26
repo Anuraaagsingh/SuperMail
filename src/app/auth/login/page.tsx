@@ -14,12 +14,14 @@ import {
   Lock, 
   Eye, 
   EyeOff,
-  Chrome
+  Chrome,
+  User,
+  LogOut
 } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { loginWithDemo } = useAuth();
+  const { loginWithDemo, user, logout } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isDemoLoading, setIsDemoLoading] = useState(false);
   const [error, setError] = useState('');
@@ -202,6 +204,42 @@ export default function LoginPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Profile Box for Previously Logged In Users */}
+        {user && (
+          <Card className="w-full max-w-md mx-auto mt-6 bg-white/10 backdrop-blur-sm border-white/20">
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-4 mb-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
+                  {user.name?.charAt(0) || user.email?.charAt(0) || 'U'}
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-white">{user.name || 'User'}</h3>
+                  <p className="text-sm text-white/80">{user.email}</p>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <Button 
+                  onClick={() => router.push('/mail/inbox')}
+                  className="w-full bg-white/20 hover:bg-white/30 text-white border-white/30"
+                >
+                  <User className="h-4 w-4 mr-2" />
+                  Continue as {user.name?.split(' ')[0] || 'User'}
+                </Button>
+                
+                <Button 
+                  variant="outline"
+                  onClick={logout}
+                  className="w-full border-white/30 text-white hover:bg-white/10"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
