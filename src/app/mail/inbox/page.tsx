@@ -137,7 +137,11 @@ export default function InboxPage() {
         console.error('Failed to fetch emails:', data.error);
         setGmailConnected(false);
         setGmailMessage(data.message || 'Failed to fetch emails');
-        if (data.error?.includes('Gmail not connected')) {
+        
+        if (data.error === 'Gmail not configured') {
+          // Show demo emails when Gmail API is not configured
+          loadDemoEmails();
+        } else if (data.error?.includes('Gmail not connected')) {
           // Show demo emails for users who haven't connected Gmail
           loadDemoEmails();
         }
@@ -300,7 +304,11 @@ export default function InboxPage() {
         window.location.href = data.authUrl;
       } else {
         console.error('Failed to get OAuth URL:', data.error);
-        setGmailMessage('Failed to initiate Gmail connection. Please try again.');
+        if (data.error === 'Gmail not configured') {
+          setGmailMessage('Gmail API is not configured. Please set up Google OAuth credentials to connect Gmail.');
+        } else {
+          setGmailMessage(data.message || 'Failed to initiate Gmail connection. Please try again.');
+        }
       }
     } catch (error) {
       console.error('Error connecting Gmail:', error);

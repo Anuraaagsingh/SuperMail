@@ -14,6 +14,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Check if Gmail API credentials are configured
+    if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+      return NextResponse.json(
+        { 
+          error: 'Gmail not configured',
+          message: 'Gmail API credentials are not configured. Please set up Google OAuth credentials to connect Gmail.'
+        },
+        { status: 503 }
+      );
+    }
+
     const searchParams = request.nextUrl.searchParams;
     const redirectUri = searchParams.get('redirect_uri');
 

@@ -15,17 +15,40 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Check if Gmail API credentials are configured
+    if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+      console.log('Gmail API credentials not configured');
+      return NextResponse.json({
+        messages: [],
+        nextPageToken: null,
+        resultSizeEstimate: 0,
+        error: 'Gmail not configured',
+        message: 'Gmail API credentials are not configured. Please set up Google OAuth credentials to connect Gmail.'
+      });
+    }
+
     const searchParams = request.nextUrl.searchParams;
     const pageToken = searchParams.get('pageToken') || undefined;
     const maxResults = parseInt(searchParams.get('maxResults') || '10');
 
     // Check if user has Gmail connected
     const supabase = createSupabaseServiceClient();
-    const { data: userData } = await supabase
+    const { data: userData, error: userError } = await supabase
       .from('users')
       .select('google_id')
       .eq('clerk_id', userId)
       .single();
+
+    if (userError) {
+      console.error('Error fetching user data:', userError);
+      return NextResponse.json({
+        messages: [],
+        nextPageToken: null,
+        resultSizeEstimate: 0,
+        error: 'Database error',
+        message: 'Failed to fetch user data. Please try again.'
+      });
+    }
 
     if (!userData?.google_id) {
       console.log('User has not connected Gmail yet');
@@ -33,6 +56,7 @@ export async function GET(request: NextRequest) {
         messages: [],
         nextPageToken: null,
         resultSizeEstimate: 0,
+        error: 'Gmail not connected',
         message: 'Gmail not connected. Please connect your Gmail account to see real emails.'
       });
     }

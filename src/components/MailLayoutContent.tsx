@@ -10,6 +10,7 @@ import { ThemeToggle } from '@supermail/components/theme-toggle';
 import { SettingsOverlay } from '@supermail/components/SettingsOverlay';
 import { ComposeModal } from '@supermail/components/ComposeModal';
 import { ProfileDropdown } from '@supermail/components/ProfileDropdown';
+import { EnvironmentChecker } from '@supermail/components/EnvironmentChecker';
 import { Button } from '@supermail/components/ui/button';
 import { Menu, X, Mail, Plus, Search } from 'lucide-react';
 
@@ -136,6 +137,9 @@ export function MailLayoutContent({ children }: MailLayoutContentProps) {
         isOpen={showCompose}
         onClose={() => setShowCompose(false)}
       />
+
+      {/* Environment Checker */}
+      <EnvironmentChecker />
     </div>
   );
 }
