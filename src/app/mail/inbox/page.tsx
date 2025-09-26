@@ -8,6 +8,7 @@ import { Badge } from '@supermail/components/ui/badge';
 import { SettingsOverlay } from '@supermail/components/SettingsOverlay';
 import { ScheduleDialog } from '@supermail/components/ScheduleDialog';
 import { CustomLoader } from '@supermail/components/ui/custom-loader';
+import { useIsMobile } from '@supermail/hooks/use-mobile';
 import { 
   Search, 
   Filter, 
@@ -43,6 +44,7 @@ interface Email {
 export default function InboxPage() {
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
+  const isMobile = useIsMobile();
   const [showSettings, setShowSettings] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [emails, setEmails] = useState<Email[]>([]);
@@ -51,7 +53,7 @@ export default function InboxPage() {
   const [hasMoreEmails, setHasMoreEmails] = useState(true);
   const [isRegistering, setIsRegistering] = useState(false);
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
-  const [showEmailView, setShowEmailView] = useState(true);
+  const [showEmailView, setShowEmailView] = useState(!isMobile);
   const [showScheduleDialog, setShowScheduleDialog] = useState(false);
   const [gmailConnected, setGmailConnected] = useState(false);
   const [gmailMessage, setGmailMessage] = useState('');
@@ -242,6 +244,10 @@ export default function InboxPage() {
 
   const handleEmailClick = (email: Email) => {
     setSelectedEmail(email);
+    if (isMobile) {
+      // On mobile, navigate to the thread page instead of showing inline view
+      router.push(`/mail/thread/${email.threadId || email.id}`);
+    }
   };
 
   const handleReply = (email: Email) => {
@@ -294,7 +300,7 @@ export default function InboxPage() {
   return (
     <div className="flex h-full">
       {/* Email List Panel */}
-      <div className={`${showEmailView ? 'w-1/2' : 'w-full'} border-r bg-background transition-all duration-300`}>
+      <div className={`${showEmailView && !isMobile ? 'w-1/2' : 'w-full'} border-r bg-background transition-all duration-300`}>
         <div className="flex h-16 items-center justify-between border-b px-6">
             <div>
             <h2 className="text-lg font-semibold">Inbox</h2>
@@ -309,14 +315,16 @@ export default function InboxPage() {
             <Button variant="ghost" size="sm">
               <RefreshCw className="h-4 w-4" />
             </Button>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => setShowEmailView(!showEmailView)}
-              title={showEmailView ? "Hide email view" : "Show email view"}
-            >
-              <Menu className="h-4 w-4" />
-            </Button>
+            {!isMobile && (
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setShowEmailView(!showEmailView)}
+                title={showEmailView ? "Hide email view" : "Show email view"}
+              >
+                <Menu className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
         
@@ -355,7 +363,9 @@ export default function InboxPage() {
                 <div
                   key={email.id}
                   onClick={() => handleEmailClick(email)}
-                  className="flex items-start space-x-4 p-4 hover:bg-accent cursor-pointer transition-colors"
+                  className={`flex items-start space-x-4 p-4 hover:bg-accent cursor-pointer transition-colors ${
+                    selectedEmail?.id === email.id ? 'bg-accent border-r-2 border-primary' : ''
+                  }`}
                 >
                   <div className="flex-shrink-0">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
@@ -426,8 +436,8 @@ export default function InboxPage() {
         </div>
             </div>
             
-      {/* Email Content Panel */}
-      {showEmailView && (
+      {/* Email Content Panel - Only show on desktop */}
+      {showEmailView && !isMobile && (
         <div className="w-1/2 bg-muted/50">
           {selectedEmail ? (
             <div className="h-full flex flex-col">
@@ -485,13 +495,16 @@ export default function InboxPage() {
 
               {/* Email Body */}
               <div className="flex-1 overflow-auto p-6">
-                <div className="prose prose-sm max-w-none">
-                  <p className="whitespace-pre-wrap">{selectedEmail.snippet}</p>
-                  {selectedEmail.body && (
+                <div className="prose prose-sm max-w-none dark:prose-invert">
+                  {selectedEmail.body ? (
                     <div 
-                      className="mt-4"
+                      className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground dark:prose-headings:text-white prose-p:text-foreground dark:prose-p:text-slate-300 prose-strong:text-foreground dark:prose-strong:text-white"
                       dangerouslySetInnerHTML={{ __html: selectedEmail.body }}
                     />
+                  ) : (
+                    <div className="whitespace-pre-wrap text-foreground">
+                      {selectedEmail.snippet}
+                    </div>
                   )}
                 </div>
               </div>

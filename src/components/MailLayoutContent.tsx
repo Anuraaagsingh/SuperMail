@@ -11,7 +11,7 @@ import { SettingsOverlay } from '@supermail/components/SettingsOverlay';
 import { ComposeModal } from '@supermail/components/ComposeModal';
 import { ProfileDropdown } from '@supermail/components/ProfileDropdown';
 import { Button } from '@supermail/components/ui/button';
-import { Menu, X, Mail, RefreshCw, Plus, Settings, Search } from 'lucide-react';
+import { Menu, X, Mail, Plus, Search } from 'lucide-react';
 
 interface MailLayoutContentProps {
   children: ReactNode;
@@ -93,19 +93,9 @@ export function MailLayoutContent({ children }: MailLayoutContentProps) {
           {/* Right side actions */}
           <div className="flex items-center space-x-2">
             <Button variant="ghost" size="sm">
-              <RefreshCw className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm">
               <Plus className="h-4 w-4" />
             </Button>
             <ThemeToggle />
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => setShowSettings(true)}
-            >
-              <Settings className="h-4 w-4" />
-            </Button>
             
             {/* Profile Dropdown */}
             <ProfileDropdown onSettingsClick={() => setShowSettings(true)} />
