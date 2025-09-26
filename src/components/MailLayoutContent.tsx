@@ -92,7 +92,12 @@ export function MailLayoutContent({ children }: MailLayoutContentProps) {
 
           {/* Right side actions */}
           <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="sm">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setShowCompose(true)}
+              title="Compose new email"
+            >
               <Plus className="h-4 w-4" />
             </Button>
             <ThemeToggle />

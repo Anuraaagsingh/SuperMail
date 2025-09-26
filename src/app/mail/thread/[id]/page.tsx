@@ -6,6 +6,7 @@ import { Button } from '@supermail/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@supermail/components/ui/card';
 import { Badge } from '@supermail/components/ui/badge';
 import { useAuth } from '@supermail/hooks/useAuth';
+import { getDemoThread } from '@supermail/lib/demoAuth';
 import { 
   ArrowLeft, 
   Reply, 
@@ -19,192 +20,6 @@ import {
   User
 } from 'lucide-react';
 
-// Demo email data
-const demoEmails = {
-  '1': {
-    id: '1',
-    subject: 'Welcome to SuperMail! This is your demo inbox.',
-    from: 'SuperMail Team',
-    fromEmail: 'team@supermail.app',
-    to: 'demo@supermail.app',
-    date: new Date().toISOString(),
-    isRead: false,
-    isStarred: false,
-    body: `
-      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333;">
-        <h2 style="color: #2563eb; margin-bottom: 16px;">Welcome to SuperMail! 🎉</h2>
-        
-        <p>Thank you for trying SuperMail! This is your demo inbox where you can explore all the features of our modern email client.</p>
-        
-        <h3 style="color: #374151; margin-top: 24px; margin-bottom: 12px;">What you can do:</h3>
-        <ul style="margin-left: 20px; margin-bottom: 20px;">
-          <li>📧 Read and manage your emails</li>
-          <li>⭐ Star important messages</li>
-          <li>📝 Compose new emails</li>
-          <li>🔍 Search through your inbox</li>
-          <li>⚙️ Customize your settings</li>
-        </ul>
-        
-        <p>Feel free to explore the interface and try out all the features. This is a demo environment, so no real emails will be sent or received.</p>
-        
-        <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin: 20px 0;">
-          <p style="margin: 0; font-weight: 500; color: #374151;">💡 Pro Tip:</p>
-          <p style="margin: 8px 0 0 0; color: #6b7280;">Use the keyboard shortcuts (⌘+K) to quickly navigate and perform actions.</p>
-        </div>
-        
-        <p>Happy emailing!</p>
-        <p style="margin-top: 20px;">
-          <strong>The SuperMail Team</strong><br>
-          <span style="color: #6b7280;">team@supermail.app</span>
-        </p>
-      </div>
-    `,
-    snippet: 'Welcome to SuperMail! This is your demo inbox. Feel free to explore the features of SuperMail.'
-  },
-  '2': {
-    id: '2',
-    subject: 'Meeting Reminder',
-    from: 'Calendar',
-    fromEmail: 'calendar@supermail.app',
-    to: 'demo@supermail.app',
-    date: new Date(Date.now() - 86400000).toISOString(),
-    isRead: false,
-    isStarred: true,
-    body: `
-      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333;">
-        <h2 style="color: #dc2626; margin-bottom: 16px;">📅 Meeting Reminder</h2>
-        
-        <p>Your meeting with the Product Team is scheduled for tomorrow at 10:00 AM.</p>
-        
-        <div style="background: #fef2f2; border: 1px solid #fecaca; padding: 16px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #dc2626; margin: 0 0 8px 0;">Meeting Details:</h3>
-          <p style="margin: 4px 0; color: #374151;"><strong>Date:</strong> Tomorrow, 10:00 AM</p>
-          <p style="margin: 4px 0; color: #374151;"><strong>Duration:</strong> 1 hour</p>
-          <p style="margin: 4px 0; color: #374151;"><strong>Location:</strong> Conference Room A</p>
-          <p style="margin: 4px 0; color: #374151;"><strong>Attendees:</strong> Product Team, Engineering Team</p>
-        </div>
-        
-        <h3 style="color: #374151; margin-top: 24px; margin-bottom: 12px;">Agenda:</h3>
-        <ul style="margin-left: 20px; margin-bottom: 20px;">
-          <li>Review Q3 roadmap</li>
-          <li>Discuss new feature priorities</li>
-          <li>Address technical challenges</li>
-          <li>Plan next sprint</li>
-        </ul>
-        
-        <p>Please prepare your updates and questions in advance. Looking forward to a productive meeting!</p>
-        
-        <p style="margin-top: 20px;">
-          <strong>Calendar System</strong><br>
-          <span style="color: #6b7280;">calendar@supermail.app</span>
-        </p>
-      </div>
-    `,
-    snippet: 'Your meeting with the Product Team is scheduled for tomorrow at 10:00 AM.'
-  },
-  '3': {
-    id: '3',
-    subject: 'Invoice #INV-2023-001',
-    from: 'Billing',
-    fromEmail: 'billing@supermail.app',
-    to: 'demo@supermail.app',
-    date: new Date(Date.now() - 172800000).toISOString(),
-    isRead: true,
-    isStarred: false,
-    body: `
-      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333;">
-        <h2 style="color: #059669; margin-bottom: 16px;">💰 Invoice #INV-2023-001</h2>
-        
-        <p>Your invoice #INV-2023-001 for $199.99 is due in 7 days.</p>
-        
-        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 16px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #059669; margin: 0 0 12px 0;">Invoice Summary:</h3>
-          <div style="display: flex; justify-content: space-between; margin: 8px 0;">
-            <span>SuperMail Pro Plan</span>
-            <span>$199.99</span>
-          </div>
-          <div style="display: flex; justify-content: space-between; margin: 8px 0;">
-            <span>Tax (8.5%)</span>
-            <span>$17.00</span>
-          </div>
-          <hr style="border: none; border-top: 1px solid #d1d5db; margin: 12px 0;">
-          <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 18px;">
-            <span>Total</span>
-            <span>$216.99</span>
-          </div>
-        </div>
-        
-        <h3 style="color: #374151; margin-top: 24px; margin-bottom: 12px;">Payment Options:</h3>
-        <ul style="margin-left: 20px; margin-bottom: 20px;">
-          <li>💳 Credit Card (Visa, MasterCard, American Express)</li>
-          <li>🏦 Bank Transfer</li>
-          <li>💻 PayPal</li>
-          <li>₿ Bitcoin (crypto payments accepted)</li>
-        </ul>
-        
-        <div style="background: #fef3c7; border: 1px solid #fde68a; padding: 16px; border-radius: 8px; margin: 20px 0;">
-          <p style="margin: 0; color: #92400e;"><strong>⚠️ Important:</strong> Payment is due within 7 days to avoid service interruption.</p>
-        </div>
-        
-        <p>If you have any questions about this invoice, please don't hesitate to contact our billing team.</p>
-        
-        <p style="margin-top: 20px;">
-          <strong>Billing Department</strong><br>
-          <span style="color: #6b7280;">billing@supermail.app</span>
-        </p>
-      </div>
-    `,
-    snippet: 'Your invoice #INV-2023-001 for $199.99 is due in 7 days.'
-  },
-  '4': {
-    id: '4',
-    subject: 'Product Newsletter - July 2023',
-    from: 'Product Updates',
-    fromEmail: 'updates@supermail.app',
-    to: 'demo@supermail.app',
-    date: new Date(Date.now() - 259200000).toISOString(),
-    isRead: true,
-    isStarred: false,
-    body: `
-      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333;">
-        <h2 style="color: #7c3aed; margin-bottom: 16px;">🚀 Product Newsletter - July 2023</h2>
-        
-        <p>Check out our latest product updates and new features!</p>
-        
-        <h3 style="color: #374151; margin-top: 24px; margin-bottom: 12px;">✨ New Features:</h3>
-        <ul style="margin-left: 20px; margin-bottom: 20px;">
-          <li><strong>Smart Filters:</strong> AI-powered email categorization</li>
-          <li><strong>Quick Actions:</strong> Swipe gestures for mobile users</li>
-          <li><strong>Dark Mode:</strong> Beautiful dark theme for night owls</li>
-          <li><strong>Offline Support:</strong> Read emails without internet</li>
-        </ul>
-        
-        <h3 style="color: #374151; margin-top: 24px; margin-bottom: 12px;">🔧 Improvements:</h3>
-        <ul style="margin-left: 20px; margin-bottom: 20px;">
-          <li>50% faster email loading</li>
-          <li>Improved search accuracy</li>
-          <li>Better mobile experience</li>
-          <li>Enhanced security features</li>
-        </ul>
-        
-        <div style="background: #e0e7ff; border: 1px solid #c7d2fe; padding: 16px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #3730a3; margin: 0 0 8px 0;">🎯 Coming Soon:</h3>
-          <p style="margin: 4px 0; color: #374151;">• Advanced email analytics</p>
-          <p style="margin: 4px 0; color: #374151;">• Team collaboration features</p>
-          <p style="margin: 4px 0; color: #374151;">• Custom email templates</p>
-        </div>
-        
-        <p>We're constantly working to make SuperMail the best email experience for you. Thank you for being part of our community!</p>
-        
-        <p style="margin-top: 20px;">
-          <strong>Product Team</strong><br>
-          <span style="color: #6b7280;">updates@supermail.app</span>
-        </p>
-      </div>
-    `,
-    snippet: 'Check out our latest product updates and new features.'
-  }
-};
 
 export default function ThreadPage() {
   const params = useParams();
@@ -221,16 +36,50 @@ export default function ThreadPage() {
       return;
     }
     
-    // Simulate loading
-    const timer = setTimeout(() => {
-      const demoEmail = demoEmails[threadId as keyof typeof demoEmails];
-      if (demoEmail) {
-        setEmail(demoEmail);
+    // Fetch demo thread
+    const fetchThread = async () => {
+      try {
+        const result = await getDemoThread(threadId);
+        if (result.messages && result.messages.length > 0) {
+          const email = result.messages[0]; // Get the first message in the thread
+          
+          // Extract headers
+          const headers = email.payload?.headers || [];
+          const subject = headers.find((h: any) => h.name === 'Subject')?.value || 'No Subject';
+          const from = headers.find((h: any) => h.name === 'From')?.value || '';
+          const to = headers.find((h: any) => h.name === 'To')?.value || '';
+          const date = headers.find((h: any) => h.name === 'Date')?.value || '';
+          
+          // Extract sender name and email
+          const senderMatch = from.match(/(?:"?([^"]*)"?\s)?(?:<?(.+@[^>]+)>?)/);
+          const senderName = senderMatch ? (senderMatch[1] || senderMatch[2]) : from;
+          const senderEmail = senderMatch ? senderMatch[2] : from;
+          
+          // Extract body
+          const body = email.payload?.body?.data || email.snippet;
+          
+          setEmail({
+            id: email.id,
+            threadId: email.threadId,
+            subject,
+            from: senderName,
+            fromEmail: senderEmail,
+            to,
+            date,
+            isRead: !email.labelIds.includes('UNREAD'),
+            isStarred: email.labelIds.includes('STARRED'),
+            body,
+            snippet: email.snippet
+          });
+        }
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error fetching thread:', error);
+        setIsLoading(false);
       }
-      setIsLoading(false);
-    }, 500);
+    };
     
-    return () => clearTimeout(timer);
+    fetchThread();
   }, [authLoading, isAuthenticated, router, threadId]);
   
   if (authLoading || isLoading) {

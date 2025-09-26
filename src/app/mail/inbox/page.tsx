@@ -57,6 +57,7 @@ export default function InboxPage() {
   const [showScheduleDialog, setShowScheduleDialog] = useState(false);
   const [gmailConnected, setGmailConnected] = useState(false);
   const [gmailMessage, setGmailMessage] = useState('');
+  const [deletedEmails, setDeletedEmails] = useState<Set<string>>(new Set());
 
   // Register user in Supabase when they first login
   const registerUser = async () => {
@@ -270,6 +271,22 @@ export default function InboxPage() {
     setShowScheduleDialog(true);
   };
 
+  const handleDelete = (email: Email) => {
+    setDeletedEmails(prev => new Set([...Array.from(prev), email.id]));
+    // If the deleted email was selected, clear the selection
+    if (selectedEmail?.id === email.id) {
+      setSelectedEmail(null);
+    }
+  };
+
+  const handleRestore = (emailId: string) => {
+    setDeletedEmails(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(emailId);
+      return newSet;
+    });
+  };
+
   const handleConnectGmail = async () => {
     try {
       const redirectUri = `${window.location.origin}/auth/gmail/callback`;
@@ -292,9 +309,11 @@ export default function InboxPage() {
   };
 
   const filteredEmails = emails.filter(email => 
-    email.from.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    email.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    email.snippet.toLowerCase().includes(searchQuery.toLowerCase())
+    !deletedEmails.has(email.id) && (
+      email.from.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      email.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      email.snippet.toLowerCase().includes(searchQuery.toLowerCase())
+    )
   );
 
   return (
@@ -363,7 +382,7 @@ export default function InboxPage() {
                 <div
                   key={email.id}
                   onClick={() => handleEmailClick(email)}
-                  className={`flex items-start space-x-4 p-4 hover:bg-accent cursor-pointer transition-colors ${
+                  className={`group flex items-start space-x-4 p-4 hover:bg-accent cursor-pointer transition-colors ${
                     selectedEmail?.id === email.id ? 'bg-accent border-r-2 border-primary' : ''
                   }`}
                 >
@@ -407,6 +426,18 @@ export default function InboxPage() {
                     {!email.isRead && (
                       <div className="h-2 w-2 bg-primary rounded-full" />
                     )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(email);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0"
+                      title="Delete email"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -431,6 +462,43 @@ export default function InboxPage() {
                   'Load More'
                 )}
               </Button>
+            </div>
+          )}
+          
+          {/* Trash Section - Show deleted emails */}
+          {deletedEmails.size > 0 && (
+            <div className="border-t">
+              <div className="p-4 bg-muted/50">
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">Trash ({deletedEmails.size})</h3>
+                <div className="space-y-2">
+                  {emails
+                    .filter(email => deletedEmails.has(email.id))
+                    .map((email) => (
+                      <div
+                        key={`trash-${email.id}`}
+                        className="flex items-center justify-between p-3 bg-background rounded-lg border"
+                      >
+                        <div className="flex items-center space-x-3 flex-1 min-w-0">
+                          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs font-medium">
+                            {email.from.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{email.from}</p>
+                            <p className="text-xs text-muted-foreground truncate">{email.subject}</p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRestore(email.id)}
+                          className="text-xs"
+                        >
+                          Restore
+                        </Button>
+                      </div>
+                    ))}
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -481,7 +549,12 @@ export default function InboxPage() {
                     <Button variant="ghost" size="sm">
                       <Archive className="h-4 w-4" />
             </Button>
-                    <Button variant="ghost" size="sm">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleDelete(selectedEmail)}
+                      title="Delete email"
+                    >
                       <Trash2 className="h-4 w-4" />
             </Button>
                   </div>
