@@ -20,7 +20,10 @@ export function EnvironmentChecker() {
     // Check environment variables (client-side only)
     const checkEnvironment = () => {
       const gmailConfigured = !!(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID);
-      const supabaseConfigured = !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+      const supabaseConfigured = !!(
+        (process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.supermail_NEXT_PUBLIC_SUPABASE_URL) && 
+        (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.supermail_NEXT_PUBLIC_SUPABASE_ANON_KEY)
+      );
       const clerkConfigured = !!(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
       setStatus({
@@ -102,10 +105,10 @@ export function EnvironmentChecker() {
                   variant="outline"
                   size="sm"
                   className="w-full text-xs"
-                  onClick={() => window.open('/GMAIL_SETUP_GUIDE.md', '_blank')}
+                  onClick={() => window.open('/COMPLETE_SETUP_GUIDE.md', '_blank')}
                 >
                   <ExternalLink className="h-3 w-3 mr-1" />
-                  Setup Guide
+                  Complete Setup Guide
                 </Button>
               </div>
             )}

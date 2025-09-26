@@ -77,15 +77,21 @@ export default function InboxPage() {
         }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        console.error('Failed to register user');
+        console.error('Failed to register user:', data.error);
+        if (data.error?.includes('Supabase')) {
+          setGmailMessage('Database connection failed. Please check Supabase configuration.');
+        }
         return false;
       }
       
-      console.log('User registered successfully');
+      console.log('User registered successfully:', data);
       return true;
     } catch (error) {
       console.error('Error registering user:', error);
+      setGmailMessage('Failed to register user. Please try again.');
       return false;
     } finally {
       setIsRegistering(false);
@@ -199,16 +205,23 @@ export default function InboxPage() {
     if (isAuthenticated && user) {
       if (user.id === 'demo-user-id') {
         // Load demo emails for demo user
+        console.log('Loading demo emails for demo user');
         loadDemoEmails();
       } else {
         // Register real user first, then fetch emails
         const initializeUser = async () => {
+          console.log('Initializing real user:', user.email);
           const registered = await registerUser();
           if (registered) {
-            // Wait a bit for the database to be ready
+            console.log('User registered, fetching emails...');
+            // Wait a bit for the database to be ready, then fetch emails
             setTimeout(() => {
               fetchEmails();
             }, 1000);
+          } else {
+            console.log('User registration failed, falling back to demo emails');
+            // If registration fails, fall back to demo emails
+            loadDemoEmails();
           }
         };
         initializeUser();
