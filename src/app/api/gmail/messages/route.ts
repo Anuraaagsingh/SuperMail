@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     const supabase = createSupabaseServiceClient();
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('google_id')
+      .select('id, google_id')
       .eq('clerk_id', userId)
       .single();
 
@@ -52,6 +52,24 @@ export async function GET(request: NextRequest) {
 
     if (!userData?.google_id) {
       console.log('User has not connected Gmail yet');
+      return NextResponse.json({
+        messages: [],
+        nextPageToken: null,
+        resultSizeEstimate: 0,
+        error: 'Gmail not connected',
+        message: 'Gmail not connected. Please connect your Gmail account to see real emails.'
+      });
+    }
+
+    // Check if user has Gmail tokens
+    const { data: tokenData, error: tokenError } = await supabase
+      .from('tokens')
+      .select('id')
+      .eq('user_id', userData.id)
+      .single();
+
+    if (tokenError || !tokenData) {
+      console.log('User has not connected Gmail tokens yet');
       return NextResponse.json({
         messages: [],
         nextPageToken: null,
