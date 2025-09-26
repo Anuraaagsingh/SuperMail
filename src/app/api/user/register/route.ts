@@ -30,7 +30,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log('Creating Supabase service client...');
     const supabase = createSupabaseServiceClient();
+    console.log('Supabase client created successfully');
 
     // Check if user already exists
     console.log('Checking for existing user with clerk_id:', userId);
@@ -43,7 +45,12 @@ export async function POST(request: NextRequest) {
     if (checkError && checkError.code !== 'PGRST116') {
       console.error('Error checking existing user:', checkError);
       return NextResponse.json(
-        { error: 'Failed to check existing user' },
+        { 
+          error: 'Failed to check existing user',
+          details: checkError.message,
+          code: checkError.code,
+          hint: checkError.hint
+        },
         { status: 500 }
       );
     }
@@ -85,7 +92,12 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('Error creating user:', error);
       return NextResponse.json(
-        { error: 'Failed to create user', details: error.message },
+        { 
+          error: 'Failed to create user', 
+          details: error.message,
+          code: error.code,
+          hint: error.hint
+        },
         { status: 500 }
       );
     }
