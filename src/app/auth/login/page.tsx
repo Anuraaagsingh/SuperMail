@@ -7,30 +7,33 @@ import { Input } from '@supermail/components/ui/input';
 import { Label } from '@supermail/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@supermail/components/ui/card';
 import { Separator } from '@supermail/components/ui/separator';
+import { SignInButton } from '@clerk/nextjs';
+import { useAuth } from '@supermail/hooks/useAuth';
 import { 
   Mail, 
   Lock, 
   Eye, 
   EyeOff,
-  Apple,
   Chrome
 } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { loginWithDemo } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isDemoLoading, setIsDemoLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleDemoLogin = async () => {
-    setIsLoading(true);
+    setIsDemoLoading(true);
+    setError('');
     try {
-      // Simulate demo login
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await loginWithDemo();
       router.push('/mail/inbox');
     } catch (error) {
       console.error('Demo login failed:', error);
-    } finally {
-      setIsLoading(false);
+      setError('Demo login failed. Please try again.');
+      setIsDemoLoading(false);
     }
   };
 
@@ -65,26 +68,56 @@ export default function LoginPage() {
           <CardContent className="space-y-6">
             {/* Social Login Buttons */}
             <div className="space-y-3">
+              {/* Demo Login Button */}
+              <Button 
+                onClick={handleDemoLogin}
+                disabled={isDemoLoading}
+                className="w-full bg-black hover:bg-gray-800 text-white border-0"
+              >
+                {isDemoLoading ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                ) : (
+                  <Mail className="h-4 w-4 mr-2" />
+                )}
+                Demo Login
+              </Button>
+
+              {/* Apple Login Button */}
               <Button 
                 variant="secondary" 
                 className="w-full bg-white/10 hover:bg-white/20 border-white/20 text-white"
-                onClick={handleDemoLogin}
-                disabled={isLoading}
+                onClick={() => {
+                  // Apple login functionality - you can implement this later
+                  console.log('Apple login clicked');
+                }}
               >
-                <Apple className="h-4 w-4 mr-2" />
+                <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+                </svg>
                 Login with Apple
               </Button>
               
-              <Button 
-                variant="secondary" 
-                className="w-full bg-white/10 hover:bg-white/20 border-white/20 text-white"
-                onClick={handleDemoLogin}
-                disabled={isLoading}
+              {/* Google Login Button with Clerk */}
+              <SignInButton
+                mode="modal"
+                fallbackRedirectUrl="/mail/inbox"
               >
-                <Chrome className="h-4 w-4 mr-2" />
-                Login with Google
-              </Button>
+                <Button 
+                  variant="secondary" 
+                  className="w-full bg-white/10 hover:bg-white/20 border-white/20 text-white"
+                >
+                  <Chrome className="h-4 w-4 mr-2" />
+                  Login with Google
+                </Button>
+              </SignInButton>
             </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="p-4 rounded-lg bg-red-500/20 border border-red-400/30 text-red-200 text-sm">
+                {error}
+              </div>
+            )}
 
             {/* Separator */}
             <div className="relative">
@@ -137,9 +170,9 @@ export default function LoginPage() {
               <Button 
                 className="w-full bg-white text-gray-900 hover:bg-white/90 font-medium"
                 onClick={handleDemoLogin}
-                disabled={isLoading}
+                disabled={isDemoLoading}
               >
-                {isLoading ? 'Signing in...' : 'Login'}
+                {isDemoLoading ? 'Signing in...' : 'Login'}
               </Button>
             </div>
 
