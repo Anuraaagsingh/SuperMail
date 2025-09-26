@@ -258,9 +258,25 @@ export default function InboxPage() {
     setShowScheduleDialog(true);
   };
 
-  const handleConnectGmail = () => {
-    // TODO: Implement Gmail OAuth connection
-    alert('Gmail connection coming soon! For now, you can use the demo emails.');
+  const handleConnectGmail = async () => {
+    try {
+      const redirectUri = `${window.location.origin}/auth/gmail/callback`;
+      
+      // Get the OAuth URL from our API
+      const response = await fetch(`/api/gmail/oauth?redirect_uri=${encodeURIComponent(redirectUri)}`);
+      const data = await response.json();
+      
+      if (data.authUrl) {
+        // Redirect to Google OAuth
+        window.location.href = data.authUrl;
+      } else {
+        console.error('Failed to get OAuth URL:', data.error);
+        setGmailMessage('Failed to initiate Gmail connection. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error connecting Gmail:', error);
+      setGmailMessage('Failed to connect Gmail. Please try again.');
+    }
   };
 
   const filteredEmails = emails.filter(email => 

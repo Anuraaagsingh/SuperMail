@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { createSupabaseServerClient } from '@/lib/supabase';
+import { createSupabaseServiceClient } from '@/lib/supabase';
 import { encryptToken } from '@/lib/auth';
 
 // Force dynamic rendering
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     const profile = await profileResponse.json();
 
     // Store user and token in Supabase
-    const supabase = createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
     
     // Get the user from the users table
     const { data: userData } = await supabase

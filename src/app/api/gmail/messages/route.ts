@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { createSupabaseServerClient } from '@/lib/supabase';
+import { createSupabaseServiceClient } from '@/lib/supabase';
 import { getValidAccessToken } from '@/lib/auth';
 
 // Force dynamic rendering
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     const maxResults = parseInt(searchParams.get('maxResults') || '10');
 
     // Check if user has Gmail connected
-    const supabase = createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
     const { data: userData } = await supabase
       .from('users')
       .select('google_id')
