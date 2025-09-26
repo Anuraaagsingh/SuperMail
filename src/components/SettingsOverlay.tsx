@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@supermail/components/ui/button';
 import { Switch } from '@supermail/components/ui/switch';
 import { Separator } from '@supermail/components/ui/separator';
+import { useAuth } from '@supermail/hooks/useAuth';
 import { 
   X, 
   Sun, 
@@ -12,7 +13,10 @@ import {
   Shield, 
   Palette,
   Mail,
-  Keyboard
+  Keyboard,
+  User,
+  CheckCircle,
+  XCircle
 } from 'lucide-react';
 
 interface SettingsOverlayProps {
@@ -21,9 +25,11 @@ interface SettingsOverlayProps {
 }
 
 export function SettingsOverlay({ isOpen, onClose }: SettingsOverlayProps) {
+  const { user } = useAuth();
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [notifications, setNotifications] = useState(true);
   const [autoSave, setAutoSave] = useState(true);
+  const [gmailConnected, setGmailConnected] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -32,6 +38,12 @@ export function SettingsOverlay({ isOpen, onClose }: SettingsOverlayProps) {
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       const currentTheme = savedTheme || (prefersDark ? 'dark' : 'light');
       setTheme(currentTheme);
+      
+      // Check Gmail connection status
+      // For demo purposes, we'll simulate this
+      // In a real app, you'd check the actual connection status
+      const hasGmailToken = localStorage.getItem('gmail_token');
+      setGmailConnected(!!hasGmailToken);
     }
   }, [isOpen]);
 
@@ -73,6 +85,56 @@ export function SettingsOverlay({ isOpen, onClose }: SettingsOverlayProps) {
 
         {/* Settings Content */}
         <div className="p-6 space-y-6">
+          {/* Profile Section */}
+          {user && (
+            <>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <User className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+                  <h3 className="font-medium text-slate-900 dark:text-white">Profile</h3>
+                </div>
+                
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
+                      {user.name?.charAt(0) || 'U'}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-slate-900 dark:text-white">
+                        {user.name || 'User'}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        {user.email}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                      <span className="text-sm text-slate-700 dark:text-slate-300">Gmail Connected</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {gmailConnected ? (
+                        <>
+                          <CheckCircle className="w-4 h-4 text-green-500" />
+                          <span className="text-xs text-green-600 dark:text-green-400">Connected</span>
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="w-4 h-4 text-red-500" />
+                          <span className="text-xs text-red-600 dark:text-red-400">Not Connected</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+            </>
+          )}
+
           {/* Appearance */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">

@@ -9,6 +9,7 @@ import { Sidebar } from '@supermail/components/Sidebar';
 import { ThemeToggle } from '@supermail/components/theme-toggle';
 import { SettingsOverlay } from '@supermail/components/SettingsOverlay';
 import { ComposeModal } from '@supermail/components/ComposeModal';
+import { ProfileDropdown } from '@supermail/components/ProfileDropdown';
 import { Button } from '@supermail/components/ui/button';
 import { Menu, X, Mail, RefreshCw, Plus, Settings, Search } from 'lucide-react';
 
@@ -106,18 +107,8 @@ export function MailLayoutContent({ children }: MailLayoutContentProps) {
               <Settings className="h-4 w-4" />
             </Button>
             
-            {/* User Menu */}
-            {user && (
-              <div className="flex items-center space-x-3">
-                <div className="text-right">
-                  <p className="text-sm font-medium">{user.name}</p>
-                  <p className="text-xs text-muted-foreground">{user.email}</p>
-                </div>
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
-                  {user.name?.charAt(0)}
-                </div>
-              </div>
-            )}
+            {/* Profile Dropdown */}
+            <ProfileDropdown onSettingsClick={() => setShowSettings(true)} />
           </div>
         </header>
         
