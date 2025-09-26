@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CustomLoader } from '@supermail/components/ui/custom-loader';
 
-export default function GmailCallbackPage() {
+function GmailCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
@@ -89,5 +89,21 @@ export default function GmailCallbackPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function GmailCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <CustomLoader size="lg" className="mx-auto mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Loading...</h2>
+          <p className="text-muted-foreground">Connecting your Gmail account...</p>
+        </div>
+      </div>
+    }>
+      <GmailCallbackContent />
+    </Suspense>
   );
 }
