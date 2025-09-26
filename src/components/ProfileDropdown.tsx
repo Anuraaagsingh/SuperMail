@@ -5,7 +5,6 @@ import { Button } from '@supermail/components/ui/button';
 import { Separator } from '@supermail/components/ui/separator';
 import { Switch } from '@supermail/components/ui/switch';
 import { useAuth } from '@supermail/hooks/useAuth';
-import { useTheme } from '@supermail/hooks/useTheme';
 import { 
   User, 
   Settings, 
@@ -21,9 +20,19 @@ interface ProfileDropdownProps {
 
 export function ProfileDropdown({ onSettingsClick }: ProfileDropdownProps) {
   const { user, logout } = useAuth();
-  const { theme, setTheme, resolvedTheme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Initialize theme on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const currentTheme = savedTheme || (prefersDark ? 'dark' : 'light');
+      setTheme(currentTheme);
+    }
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -43,7 +52,19 @@ export function ProfileDropdown({ onSettingsClick }: ProfileDropdownProps) {
   };
 
   const handleThemeToggle = () => {
-    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+    
+    if (typeof window !== 'undefined') {
+      // Apply theme to document
+      const root = document.documentElement;
+      if (newTheme === 'dark') {
+        root.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
+      }
+      localStorage.setItem('theme', newTheme);
+    }
   };
 
   if (!user) return null;
@@ -102,19 +123,18 @@ export function ProfileDropdown({ onSettingsClick }: ProfileDropdownProps) {
             {/* Dark/Light Mode Toggle */}
             <div className="flex items-center justify-between px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-800">
               <div className="flex items-center">
-                {resolvedTheme === 'dark' ? (
+                {theme === 'dark' ? (
                   <Moon className="h-4 w-4 mr-3 text-slate-600 dark:text-slate-400" />
                 ) : (
                   <Sun className="h-4 w-4 mr-3 text-slate-600 dark:text-slate-400" />
                 )}
                 <span className="text-sm text-slate-700 dark:text-slate-300">
-                  {resolvedTheme === 'dark' ? 'Dark Mode' : 'Light Mode'}
+                  {theme === 'dark' ? 'Dark Mode' : 'Light Mode'}
                 </span>
               </div>
               <Switch
-                checked={resolvedTheme === 'dark'}
+                checked={theme === 'dark'}
                 onCheckedChange={handleThemeToggle}
-                size="sm"
               />
             </div>
 

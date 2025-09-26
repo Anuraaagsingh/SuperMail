@@ -32,7 +32,7 @@ export function SettingsOverlay({ isOpen, onClose }: SettingsOverlayProps) {
   const [gmailConnected, setGmailConnected] = useState(false);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && typeof window !== 'undefined') {
       // Get current theme
       const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -49,13 +49,15 @@ export function SettingsOverlay({ isOpen, onClose }: SettingsOverlayProps) {
 
   const handleThemeChange = (newTheme: 'light' | 'dark') => {
     setTheme(newTheme);
-    const root = document.documentElement;
-    if (newTheme === 'dark') {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
+    if (typeof window !== 'undefined') {
+      const root = document.documentElement;
+      if (newTheme === 'dark') {
+        root.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
+      }
+      localStorage.setItem('theme', newTheme);
     }
-    localStorage.setItem('theme', newTheme);
   };
 
   if (!isOpen) return null;
