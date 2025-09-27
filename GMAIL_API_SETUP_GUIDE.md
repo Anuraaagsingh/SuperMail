@@ -65,8 +65,8 @@ You have the OAuth client configured in Google Cloud Console, but there are seve
 
 Make sure your `.env.local` has:
 ```bash
-GOOGLE_CLIENT_ID=484801309947-vde9jt4brfqnm5p3au2g3kc32o245b0q.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=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
+GOOGLE_CLIENT_ID=48480...
+GOOGLE_CLIENT_SECRET=GOCSP...
 ```
 
 ## 🔐 Authentication Flow

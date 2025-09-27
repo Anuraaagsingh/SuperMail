@@ -14,8 +14,8 @@ The reason you can't see emails is because **Clerk authentication is not properl
 
 ### **What's Working:**
 ```bash
-GOOGLE_CLIENT_ID=484801309947-vde9jt4brfqnm5p3au2g3kc32o245b0q.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=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
+GOOGLE_CLIENT_ID=48480...
+GOOGLE_CLIENT_SECRET=GOCSP...
 ```
 
 ### **What's Missing:**
@@ -50,7 +50,7 @@ Replace the placeholder values in `.env.local`:
 ```bash
 # Change these from placeholder values to real values
 NEXT_PUBLIC_SUPABASE_URL=https://lkzxircgejdsgoxtdlcu.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxrenhpcmNnZWpkc2dveHRkbGN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg1NTU4NjEsImV4cCI6MjA3NDEzMTg2MX0.9Z30sodSwyK39YFyhrHIr2HbQ6uXUaDb4vrmjTkAjSU
+NEXT_PUBLIC_SUPABASE_ANON_KEY=Lfb53...
 ```
 
 ### **Step 3: Restart Development Server**

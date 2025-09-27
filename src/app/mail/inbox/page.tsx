@@ -57,6 +57,8 @@ export default function InboxPage() {
   const [showScheduleDialog, setShowScheduleDialog] = useState(false);
   const [gmailConnected, setGmailConnected] = useState(false);
   const [gmailMessage, setGmailMessage] = useState('');
+  const [gmailError, setGmailError] = useState<string | null>(null);
+  const [isConnectingGmail, setIsConnectingGmail] = useState(false);
   const [deletedEmails, setDeletedEmails] = useState<Set<string>>(new Set());
 
   // Register user in Supabase when they first login
@@ -139,21 +141,36 @@ export default function InboxPage() {
         setHasMoreEmails(!!data.nextPageToken);
         setGmailConnected(true);
         setGmailMessage('');
+        setGmailError(null);
       } else {
         console.error('Failed to fetch emails:', data.error);
         setGmailConnected(false);
-        setGmailMessage(data.message || 'Failed to fetch emails');
         
-        if (data.error === 'Gmail not configured') {
-          // Show demo emails when Gmail API is not configured
+        // Detailed error handling
+        if (data.error === 'Unauthorized') {
+          setGmailError('Authentication required. Please make sure you are logged in.');
+          setGmailMessage('Please log in to access your Gmail account.');
+        } else if (data.error === 'Gmail not configured') {
+          setGmailError('Gmail API is not configured. Please contact support.');
+          setGmailMessage('Gmail integration is not available. Using demo emails.');
           loadDemoEmails();
         } else if (data.error?.includes('Gmail not connected')) {
-          // Show demo emails for users who haven't connected Gmail
+          setGmailMessage('Gmail not connected. Please connect your Gmail account to see real emails.');
+        } else if (data.error === 'Database error') {
+          setGmailError('Database connection failed. Please try again later.');
+          setGmailMessage('Unable to connect to the database. Using demo emails.');
+          loadDemoEmails();
+        } else {
+          setGmailError(data.error || 'Failed to fetch emails');
+          setGmailMessage(data.message || 'Failed to fetch emails. Using demo emails.');
           loadDemoEmails();
         }
       }
     } catch (error) {
       console.error('Error fetching emails:', error);
+      setGmailError('Network error. Please check your internet connection.');
+      setGmailMessage('Failed to fetch emails. Using demo emails.');
+      loadDemoEmails();
     } finally {
       setIsLoadingEmails(false);
     }
@@ -305,6 +322,9 @@ export default function InboxPage() {
   };
 
   const handleConnectGmail = async () => {
+    setIsConnectingGmail(true);
+    setGmailError(null);
+    
     try {
       const redirectUri = `${window.location.origin}/auth/gmail/callback`;
       
@@ -317,16 +337,30 @@ export default function InboxPage() {
         window.location.href = data.authUrl;
       } else {
         console.error('Failed to get OAuth URL:', data.error);
-        if (data.error === 'Gmail not configured') {
-          setGmailMessage('Gmail API is not configured. Please set up Google OAuth credentials to connect Gmail.');
+        
+        // Detailed error handling
+        if (data.error === 'Unauthorized') {
+          setGmailError('Authentication required. Please make sure you are logged in.');
+        } else if (data.error === 'Gmail not configured') {
+          setGmailError('Gmail API is not configured. Please contact support to set up Google OAuth credentials.');
+        } else if (data.error === 'Failed to generate OAuth URL') {
+          setGmailError('Failed to generate OAuth URL. Please check your internet connection and try again.');
         } else {
-          setGmailMessage(data.message || 'Failed to initiate Gmail connection. Please try again.');
+          setGmailError(data.message || 'Failed to initiate Gmail connection. Please try again.');
         }
       }
     } catch (error) {
       console.error('Error connecting Gmail:', error);
-      setGmailMessage('Failed to connect Gmail. Please try again.');
+      setGmailError('Network error. Please check your internet connection and try again.');
+    } finally {
+      setIsConnectingGmail(false);
     }
+  };
+
+  const handleRetryGmailConnection = async () => {
+    setGmailError(null);
+    setGmailMessage('');
+    await handleConnectGmail();
   };
 
   const filteredEmails = emails.filter(email => 
@@ -380,19 +414,73 @@ export default function InboxPage() {
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
                 <Mail className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                {!gmailConnected && gmailMessage ? (
+                {!gmailConnected && (gmailMessage || gmailError) ? (
                   <>
                     <p className="text-muted-foreground mb-2">Gmail not connected</p>
-                    <p className="text-sm text-muted-foreground mb-4">{gmailMessage}</p>
-                    <Button onClick={handleConnectGmail} className="mb-2">
-                      Connect Gmail
-                    </Button>
+                    {gmailError ? (
+                      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 mb-4">
+                        <p className="text-sm text-red-600 dark:text-red-400 font-medium">Connection Error</p>
+                        <p className="text-sm text-red-500 dark:text-red-300 mt-1">{gmailError}</p>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground mb-4">{gmailMessage}</p>
+                    )}
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <Button 
+                        onClick={handleConnectGmail} 
+                        disabled={isConnectingGmail}
+                        className="mb-2"
+                      >
+                        {isConnectingGmail ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Connecting...
+                          </>
+                        ) : (
+                          'Connect Gmail'
+                        )}
+                      </Button>
+                      {gmailError && (
+                        <Button 
+                          variant="outline" 
+                          onClick={handleRetryGmailConnection}
+                          disabled={isConnectingGmail}
+                          className="mb-2"
+                        >
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          Try Again
+                        </Button>
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground">Or use demo emails below</p>
                   </>
                 ) : (
                   <>
                     <p className="text-muted-foreground">No emails found</p>
                     <p className="text-sm text-muted-foreground">Your inbox is empty or try a different search</p>
+                    {!gmailConnected && (
+                      <div className="mt-4">
+                        <Button 
+                          variant="outline" 
+                          onClick={handleConnectGmail}
+                          disabled={isConnectingGmail}
+                          className="mb-2"
+                        >
+                          {isConnectingGmail ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Connecting...
+                            </>
+                          ) : (
+                            <>
+                              <Mail className="h-4 w-4 mr-2" />
+                              Connect Gmail
+                            </>
+                          )}
+                        </Button>
+                        <p className="text-xs text-muted-foreground">Connect Gmail to see your real emails</p>
+                      </div>
+                    )}
                   </>
                 )}
               </div>
