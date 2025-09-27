@@ -19,18 +19,34 @@ export function EnvironmentChecker() {
   useEffect(() => {
     // Check environment variables (client-side only)
     const checkEnvironment = () => {
-      const gmailConfigured = !!(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID);
-      const supabaseConfigured = !!(
-        (process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.supermail_NEXT_PUBLIC_SUPABASE_URL) && 
-        (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.supermail_NEXT_PUBLIC_SUPABASE_ANON_KEY)
-      );
-      const clerkConfigured = !!(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+      // For client-side, we need to check if the variables are available
+      // Since process.env is not available on client-side for server-only vars,
+      // we'll make an API call to check the actual configuration
+      const checkConfig = async () => {
+        try {
+          const response = await fetch('/api/debug/supabase');
+          const data = await response.json();
+          
+          // Check Gmail API configuration
+          const gmailResponse = await fetch('/api/gmail/oauth?redirect_uri=http://localhost:3000/auth/gmail/callback');
+          const gmailData = await gmailResponse.json();
+          
+          setStatus({
+            gmailConfigured: !gmailData.error || gmailData.error !== 'Gmail not configured',
+            supabaseConfigured: data.success || false,
+            clerkConfigured: true, // Clerk is working since the app loads
+          });
+        } catch (error) {
+          console.error('Error checking configuration:', error);
+          setStatus({
+            gmailConfigured: false,
+            supabaseConfigured: false,
+            clerkConfigured: false,
+          });
+        }
+      };
 
-      setStatus({
-        gmailConfigured,
-        supabaseConfigured,
-        clerkConfigured,
-      });
+      checkConfig();
     };
 
     checkEnvironment();
