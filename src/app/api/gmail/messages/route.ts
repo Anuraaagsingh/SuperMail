@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { createSupabaseServiceClient } from '@/lib/supabase';
-import { getValidAccessToken } from '@/lib/auth';
+import { createGmailClient, processGmailMessage } from '@/lib/gmail';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -29,7 +29,9 @@ export async function GET(request: NextRequest) {
 
     const searchParams = request.nextUrl.searchParams;
     const pageToken = searchParams.get('pageToken') || undefined;
-    const maxResults = parseInt(searchParams.get('maxResults') || '10');
+    const maxResults = parseInt(searchParams.get('maxResults') || '20');
+    const labelIds = searchParams.get('labelIds')?.split(',') || ['INBOX'];
+    const q = searchParams.get('q') || undefined;
 
     // Check if user has Gmail connected
     const supabase = createSupabaseServiceClient();
@@ -79,115 +81,90 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Get user's Gmail access token
-    let accessToken;
+    // Create Gmail client and fetch messages
+    const gmailClient = createGmailClient(userId);
+    
     try {
-      accessToken = await getValidAccessToken(userId);
-    } catch (error) {
-      console.error('Error getting Gmail access token:', error);
-      return NextResponse.json({
-        messages: [],
-        nextPageToken: null,
-        resultSizeEstimate: 0,
-        error: 'Gmail not connected',
-        message: 'Gmail not connected. Please connect your Gmail account to see real emails.'
+      // List messages from Gmail API
+      const response = await gmailClient.listMessages(labelIds, maxResults, pageToken, q);
+      
+      console.log('Gmail API response:', { 
+        messageCount: response.messages?.length || 0, 
+        hasMessages: !!response.messages,
+        nextPageToken: response.nextPageToken 
       });
-    }
 
-    // Fetch messages from Gmail API
-    const gmailUrl = new URL('https://gmail.googleapis.com/gmail/v1/users/me/messages');
-    if (pageToken) {
-      gmailUrl.searchParams.set('pageToken', pageToken);
-    }
-    gmailUrl.searchParams.set('maxResults', maxResults.toString());
+      if (!response.messages || response.messages.length === 0) {
+        return NextResponse.json({
+          messages: [],
+          nextPageToken: response.nextPageToken,
+          resultSizeEstimate: response.resultSizeEstimate || 0,
+        });
+      }
 
-    const response = await fetch(gmailUrl.toString(), {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-    });
+      // Fetch detailed message data for each message
+      const messagePromises = response.messages.map(async (message: any) => {
+        try {
+          const messageDetails = await gmailClient.getMessage(message.id, 'full');
+          return processGmailMessage(messageDetails);
+        } catch (error) {
+          console.error(`Error fetching message ${message.id}:`, error);
+          return null;
+        }
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('Gmail API error:', errorData);
+      const messages = await Promise.all(messagePromises);
+      
+      // Filter out null messages (failed fetches)
+      const validMessages = messages.filter(msg => msg !== null);
+
+      return NextResponse.json({
+        messages: validMessages,
+        nextPageToken: response.nextPageToken,
+        resultSizeEstimate: response.resultSizeEstimate,
+      });
+
+    } catch (error) {
+      console.error('Gmail API error:', error);
+      
+      // Handle specific Gmail API errors
+      if (error instanceof Error) {
+        if (error.message.includes('401')) {
+          return NextResponse.json({
+            messages: [],
+            nextPageToken: null,
+            resultSizeEstimate: 0,
+            error: 'Gmail not connected',
+            message: 'Gmail authentication expired. Please reconnect your Gmail account.'
+          });
+        } else if (error.message.includes('403')) {
+          return NextResponse.json({
+            messages: [],
+            nextPageToken: null,
+            resultSizeEstimate: 0,
+            error: 'Gmail access denied',
+            message: 'Gmail access denied. Please check your Gmail permissions.'
+          });
+        } else if (error.message.includes('429')) {
+          return NextResponse.json({
+            messages: [],
+            nextPageToken: null,
+            resultSizeEstimate: 0,
+            error: 'Rate limited',
+            message: 'Gmail API rate limit exceeded. Please try again later.'
+          });
+        }
+      }
+      
       return NextResponse.json(
         { 
           error: 'Failed to fetch messages from Gmail',
-          details: errorData.error?.message || 'Unknown Gmail API error'
+          details: error instanceof Error ? error.message : 'Unknown error'
         },
         { status: 500 }
       );
     }
 
-    const data = await response.json();
-    console.log('Gmail API response:', { 
-      messageCount: data.messages?.length || 0, 
-      hasMessages: !!data.messages,
-      nextPageToken: data.nextPageToken 
-    });
-
-    // Fetch detailed message data for each message
-    const messages = await Promise.all(
-      data.messages?.map(async (message: any) => {
-        const messageResponse = await fetch(
-          `https://gmail.googleapis.com/gmail/v1/users/me/messages/${message.id}`,
-          {
-            headers: {
-              'Authorization': `Bearer ${accessToken}`,
-              'Content-Type': 'application/json',
-            },
-          }
-        );
-
-        if (!messageResponse.ok) {
-          return null;
-        }
-
-        const messageData = await messageResponse.json();
-        
-        // Extract headers
-        const headers = messageData.payload?.headers || [];
-        const getHeader = (name: string) => 
-          headers.find((h: any) => h.name.toLowerCase() === name.toLowerCase())?.value || '';
-
-        // Extract body
-        let body = '';
-        if (messageData.payload?.body?.data) {
-          body = Buffer.from(messageData.payload.body.data, 'base64').toString();
-        } else if (messageData.payload?.parts) {
-          const textPart = messageData.payload.parts.find((part: any) => 
-            part.mimeType === 'text/plain' || part.mimeType === 'text/html'
-          );
-          if (textPart?.body?.data) {
-            body = Buffer.from(textPart.body.data, 'base64').toString();
-          }
-        }
-
-        return {
-          id: message.id,
-          threadId: message.threadId,
-          from: getHeader('From'),
-          to: getHeader('To'),
-          subject: getHeader('Subject'),
-          date: getHeader('Date'),
-          snippet: messageData.snippet || '',
-          body: body,
-          labels: messageData.labelIds || [],
-          isRead: !messageData.labelIds?.includes('UNREAD'),
-          isStarred: messageData.labelIds?.includes('STARRED') || false,
-        };
-      }) || []
-    );
-
-    // Filter out null messages
-    const validMessages = messages.filter(msg => msg !== null);
-
-    return NextResponse.json({
-      messages: validMessages,
-      nextPageToken: data.nextPageToken,
-      resultSizeEstimate: data.resultSizeEstimate,
-    });
   } catch (error) {
     console.error('Error fetching Gmail messages:', error);
     return NextResponse.json(

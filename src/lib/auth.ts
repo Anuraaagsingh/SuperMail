@@ -5,12 +5,13 @@ const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
 const JWT_SECRET = process.env.supermail_SUPABASE_JWT_SECRET || process.env.SUPABASE_JWT_SECRET || process.env.JWT_SECRET || 'fallback-jwt-secret-for-development-only';
 
-// Required Gmail API scopes
+// Required Gmail API scopes - Updated based on Gmail API documentation
 export const GMAIL_SCOPES = [
   'https://www.googleapis.com/auth/gmail.readonly',
   'https://www.googleapis.com/auth/gmail.modify',
   'https://www.googleapis.com/auth/gmail.send',
   'https://www.googleapis.com/auth/gmail.compose',
+  'https://www.googleapis.com/auth/gmail.labels',
   'https://www.googleapis.com/auth/userinfo.email',
   'https://www.googleapis.com/auth/userinfo.profile',
 ];
@@ -79,27 +80,33 @@ export const getValidAccessToken = async (userId: string) => {
   const now = new Date();
   const expiresAt = new Date(tokenData.expires_at);
   
-  // Check if token is still valid
-  if (tokenData.access_token && expiresAt > now) {
+  // Check if token is still valid (with 5 minute buffer)
+  const bufferTime = 5 * 60 * 1000; // 5 minutes in milliseconds
+  if (tokenData.access_token && expiresAt.getTime() > (now.getTime() + bufferTime)) {
     return tokenData.access_token;
   }
   
-  // Token expired, refresh it
-  const refreshToken = decryptToken(tokenData.encrypted_refresh_token);
-  const tokenResponse = await refreshAccessToken(refreshToken);
-  
-  // Calculate new expiration time
-  const newExpiresAt = new Date();
-  newExpiresAt.setSeconds(newExpiresAt.getSeconds() + tokenResponse.expires_in);
-  
-  // Update token in database
-  await supabase
-    .from('tokens')
-    .update({
-      access_token: tokenResponse.access_token,
-      expires_at: newExpiresAt.toISOString(),
-    })
-    .eq('user_id', userId);
-  
-  return tokenResponse.access_token;
+  // Token expired or about to expire, refresh it
+  try {
+    const refreshToken = decryptToken(tokenData.encrypted_refresh_token);
+    const tokenResponse = await refreshAccessToken(refreshToken);
+    
+    // Calculate new expiration time
+    const newExpiresAt = new Date();
+    newExpiresAt.setSeconds(newExpiresAt.getSeconds() + tokenResponse.expires_in);
+    
+    // Update token in database
+    await supabase
+      .from('tokens')
+      .update({
+        access_token: tokenResponse.access_token,
+        expires_at: newExpiresAt.toISOString(),
+      })
+      .eq('user_id', userId);
+    
+    return tokenResponse.access_token;
+  } catch (error) {
+    console.error('Error refreshing token:', error);
+    throw new Error('Failed to refresh access token. Please reconnect your Gmail account.');
+  }
 };

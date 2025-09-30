@@ -44,6 +44,7 @@ export async function GET(request: NextRequest) {
     googleAuthUrl.searchParams.set('access_type', 'offline');
     googleAuthUrl.searchParams.set('prompt', 'consent');
     googleAuthUrl.searchParams.set('state', userId); // Pass Clerk user ID as state
+    googleAuthUrl.searchParams.set('include_granted_scopes', 'true');
 
     return NextResponse.json({
       authUrl: googleAuthUrl.toString(),

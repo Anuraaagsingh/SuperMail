@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createGmailClient } from '@/lib/gmail';
 import { auth } from '@clerk/nextjs/server';
 import { createSupabaseServerClient } from '@/lib/supabase';
+import { createGmailClient, processGmailMessage } from '@/lib/gmail';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -44,11 +44,19 @@ export async function GET(request: NextRequest) {
     
     // Get message details in parallel
     const messagePromises = response.messages.map(async (message: any) => {
-      const messageDetails = await gmailClient.getMessage(message.id, 'metadata');
-      return messageDetails;
+      try {
+        const messageDetails = await gmailClient.getMessage(message.id, 'full');
+        return processGmailMessage(messageDetails);
+      } catch (error) {
+        console.error(`Error fetching message ${message.id}:`, error);
+        return null;
+      }
     });
     
     const messages = await Promise.all(messagePromises);
+    
+    // Filter out null messages (failed fetches)
+    const validMessages = messages.filter(msg => msg !== null);
     
     // Check for snoozed messages in Supabase
     const supabase = createSupabaseServerClient();
@@ -67,22 +75,21 @@ export async function GET(request: NextRequest) {
     }
     
     // Enrich messages with snooze data
-    const enrichedMessages = messages.map((message: any) => {
-      return {
-        ...message,
-        snoozedUntil: snoozedMap.get(message.id) || null,
-      };
-    });
+    const enrichedMessages = validMessages.map((message) => ({
+      ...message,
+      isSnoozed: snoozedMap.has(message.id),
+      snoozedUntil: snoozedMap.get(message.id) || null,
+    }));
     
     return NextResponse.json({
       messages: enrichedMessages,
-      nextPageToken: response.nextPageToken || null,
-      resultSizeEstimate: response.resultSizeEstimate || 0,
+      nextPageToken: response.nextPageToken,
+      resultSizeEstimate: response.resultSizeEstimate,
     });
   } catch (error) {
-    console.error('Error listing messages:', error);
+    console.error('Error fetching mail:', error);
     return NextResponse.json(
-      { error: 'Failed to list messages' }, 
+      { error: 'Failed to fetch mail' },
       { status: 500 }
     );
   }

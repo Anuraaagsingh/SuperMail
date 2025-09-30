@@ -4,29 +4,84 @@ import { getValidAccessToken } from './auth';
 const GMAIL_API_BASE = 'https://gmail.googleapis.com/gmail/v1/users/me';
 
 // Exponential backoff for API rate limiting
-const fetchWithRetry = async (url: string, options: RequestInit, retries = 3, delay = 1000) => {
+const fetchWithRetry = async (url: string, options: RequestInit, retries = 3, delay = 1000): Promise<any> => {
   try {
     const response = await fetch(url, options);
     
     if (response.status === 429 && retries > 0) {
       // Rate limited, retry with exponential backoff
+      console.log(`Rate limited, retrying in ${delay}ms...`);
       await new Promise(resolve => setTimeout(resolve, delay));
       return fetchWithRetry(url, options, retries - 1, delay * 2);
     }
     
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Gmail API error: ${response.status} - ${errorText}`);
+      let errorMessage = `Gmail API error: ${response.status}`;
+      
+      try {
+        const errorData = JSON.parse(errorText);
+        if (errorData.error?.message) {
+          errorMessage += ` - ${errorData.error.message}`;
+        }
+      } catch {
+        errorMessage += ` - ${errorText}`;
+      }
+      
+      throw new Error(errorMessage);
     }
     
     return response.json();
   } catch (error) {
-    if (retries > 0) {
+    if (retries > 0 && error instanceof Error && !error.message.includes('401')) {
+      console.log(`Request failed, retrying in ${delay}ms...`);
       await new Promise(resolve => setTimeout(resolve, delay));
       return fetchWithRetry(url, options, retries - 1, delay * 2);
     }
     throw error;
   }
+};
+
+// Helper to extract email content from Gmail API response
+const extractEmailContent = (message: any) => {
+  const headers = message.payload?.headers || [];
+  const getHeader = (name: string) => 
+    headers.find((h: any) => h.name.toLowerCase() === name.toLowerCase())?.value || '';
+
+  // Extract body content
+  let body = '';
+  let htmlBody = '';
+  
+  const extractBodyFromPart = (part: any) => {
+    if (part.mimeType === 'text/plain' && part.body?.data) {
+      body = decodeBase64(part.body.data);
+    } else if (part.mimeType === 'text/html' && part.body?.data) {
+      htmlBody = decodeBase64(part.body.data);
+    } else if (part.parts) {
+      part.parts.forEach(extractBodyFromPart);
+    }
+  };
+
+  if (message.payload?.body?.data) {
+    // Single part message
+    if (message.payload.mimeType === 'text/plain') {
+      body = decodeBase64(message.payload.body.data);
+    } else if (message.payload.mimeType === 'text/html') {
+      htmlBody = decodeBase64(message.payload.body.data);
+    }
+  } else if (message.payload?.parts) {
+    // Multi-part message
+    message.payload.parts.forEach(extractBodyFromPart);
+  }
+
+  return {
+    from: getHeader('From'),
+    to: getHeader('To'),
+    subject: getHeader('Subject'),
+    date: getHeader('Date'),
+    body: body || htmlBody,
+    htmlBody,
+  };
 };
 
 // Create Gmail API client
@@ -193,4 +248,24 @@ export const encodeBase64Url = (data: string) => {
     .replace(/=+$/, '');
   
   return base64;
+};
+
+// Enhanced message processing function
+export const processGmailMessage = (message: any) => {
+  const content = extractEmailContent(message);
+  
+  return {
+    id: message.id,
+    threadId: message.threadId,
+    from: content.from,
+    to: content.to,
+    subject: content.subject,
+    date: content.date,
+    snippet: message.snippet || '',
+    body: content.body,
+    htmlBody: content.htmlBody,
+    labels: message.labelIds || [],
+    isRead: !message.labelIds?.includes('UNREAD'),
+    isStarred: message.labelIds?.includes('STARRED') || false,
+  };
 };

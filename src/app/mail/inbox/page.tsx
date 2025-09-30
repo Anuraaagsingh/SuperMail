@@ -106,6 +106,7 @@ export default function InboxPage() {
     try {
       const params = new URLSearchParams();
       if (pageToken) params.append('pageToken', pageToken);
+      params.append('maxResults', '20'); // Set a reasonable default
       
       const response = await fetch(`/api/gmail/messages?${params.toString()}`);
       const data = await response.json();
@@ -113,7 +114,8 @@ export default function InboxPage() {
       console.log('Frontend received data:', { 
         hasMessages: !!data.messages, 
         messageCount: data.messages?.length || 0,
-        data: data 
+        nextPageToken: data.nextPageToken,
+        error: data.error
       });
       
       if (data.messages && Array.isArray(data.messages)) {
@@ -146,7 +148,7 @@ export default function InboxPage() {
         console.error('Failed to fetch emails:', data.error);
         setGmailConnected(false);
         
-        // Detailed error handling
+        // Enhanced error handling based on Gmail API documentation
         if (data.error === 'Unauthorized') {
           setGmailError('Authentication required. Please make sure you are logged in.');
           setGmailMessage('Please log in to access your Gmail account.');
@@ -154,8 +156,14 @@ export default function InboxPage() {
           setGmailError('Gmail API is not configured. Please contact support.');
           setGmailMessage('Gmail integration is not available. Using demo emails.');
           loadDemoEmails();
-        } else if (data.error?.includes('Gmail not connected')) {
+        } else if (data.error === 'Gmail not connected') {
           setGmailMessage('Gmail not connected. Please connect your Gmail account to see real emails.');
+        } else if (data.error === 'Gmail access denied') {
+          setGmailError('Gmail access denied. Please check your Gmail permissions.');
+          setGmailMessage('Gmail access was denied. Please reconnect your Gmail account.');
+        } else if (data.error === 'Rate limited') {
+          setGmailError('Gmail API rate limit exceeded. Please try again later.');
+          setGmailMessage('Too many requests to Gmail. Please wait a moment and try again.');
         } else if (data.error === 'Database error') {
           setGmailError('Database connection failed. Please try again later.');
           setGmailMessage('Unable to connect to the database. Using demo emails.');
