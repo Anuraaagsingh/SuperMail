@@ -8,6 +8,7 @@ import { Badge } from '@supermail/components/ui/badge';
 import { SettingsOverlay } from '@supermail/components/SettingsOverlay';
 import { ScheduleDialog } from '@supermail/components/ScheduleDialog';
 import { CustomLoader } from '@supermail/components/ui/custom-loader';
+import { GmailDebugPanel } from '@supermail/components/GmailDebugPanel';
 import { useIsMobile } from '@supermail/hooks/use-mobile';
 import { 
   Search, 
@@ -102,23 +103,33 @@ export default function InboxPage() {
 
   // Fetch Gmail messages
   const fetchEmails = async (pageToken?: string, append = false) => {
+    console.log('🔄 Starting to fetch emails...', { pageToken, append });
     setIsLoadingEmails(true);
+    setGmailError(null);
+    setGmailMessage('');
+    
     try {
       const params = new URLSearchParams();
       if (pageToken) params.append('pageToken', pageToken);
-      params.append('maxResults', '20'); // Set a reasonable default
+      params.append('maxResults', '20');
+      
+      console.log('📡 Making request to:', `/api/gmail/messages?${params.toString()}`);
       
       const response = await fetch(`/api/gmail/messages?${params.toString()}`);
-      const data = await response.json();
+      console.log('📡 Response status:', response.status);
       
-      console.log('Frontend received data:', { 
+      const data = await response.json();
+      console.log('📦 Response data:', { 
         hasMessages: !!data.messages, 
         messageCount: data.messages?.length || 0,
         nextPageToken: data.nextPageToken,
-        error: data.error
+        error: data.error,
+        fullData: data
       });
       
-      if (data.messages && Array.isArray(data.messages)) {
+      if (data.messages && Array.isArray(data.messages) && data.messages.length > 0) {
+        console.log('✅ Successfully received emails:', data.messages.length);
+        
         const newEmails: Email[] = data.messages.map((msg: any) => ({
           id: msg.id,
           threadId: msg.threadId,
@@ -144,18 +155,27 @@ export default function InboxPage() {
         setGmailConnected(true);
         setGmailMessage('');
         setGmailError(null);
+        
+        console.log('✅ Emails set successfully');
+      } else if (data.messages && Array.isArray(data.messages) && data.messages.length === 0) {
+        console.log('📭 No emails found in response');
+        setGmailConnected(true);
+        setGmailMessage('Your inbox is empty');
+        setGmailError(null);
+        if (!append) {
+          setEmails([]);
+        }
       } else {
-        console.error('Failed to fetch emails:', data.error);
+        console.error('❌ Failed to fetch emails:', data.error);
         setGmailConnected(false);
         
-        // Enhanced error handling based on Gmail API documentation
+        // Enhanced error handling
         if (data.error === 'Unauthorized') {
           setGmailError('Authentication required. Please make sure you are logged in.');
           setGmailMessage('Please log in to access your Gmail account.');
         } else if (data.error === 'Gmail not configured') {
           setGmailError('Gmail API is not configured. Please contact support.');
-          setGmailMessage('Gmail integration is not available. Using demo emails.');
-          loadDemoEmails();
+          setGmailMessage('Gmail integration is not available.');
         } else if (data.error === 'Gmail not connected') {
           setGmailMessage('Gmail not connected. Please connect your Gmail account to see real emails.');
         } else if (data.error === 'Gmail access denied') {
@@ -166,21 +186,19 @@ export default function InboxPage() {
           setGmailMessage('Too many requests to Gmail. Please wait a moment and try again.');
         } else if (data.error === 'Database error') {
           setGmailError('Database connection failed. Please try again later.');
-          setGmailMessage('Unable to connect to the database. Using demo emails.');
-          loadDemoEmails();
+          setGmailMessage('Unable to connect to the database.');
         } else {
           setGmailError(data.error || 'Failed to fetch emails');
-          setGmailMessage(data.message || 'Failed to fetch emails. Using demo emails.');
-          loadDemoEmails();
+          setGmailMessage(data.message || 'Failed to fetch emails. Please try connecting Gmail.');
         }
       }
     } catch (error) {
-      console.error('Error fetching emails:', error);
+      console.error('❌ Network error fetching emails:', error);
       setGmailError('Network error. Please check your internet connection.');
-      setGmailMessage('Failed to fetch emails. Using demo emails.');
-      loadDemoEmails();
+      setGmailMessage('Failed to fetch emails. Please try again.');
     } finally {
       setIsLoadingEmails(false);
+      console.log('🏁 Email fetching completed');
     }
   };
 
@@ -410,8 +428,14 @@ export default function InboxPage() {
             <Button variant="ghost" size="sm">
               <Filter className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="sm">
-              <RefreshCw className="h-4 w-4" />
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => fetchEmails()}
+              disabled={isLoadingEmails}
+              title="Refresh emails"
+            >
+              <RefreshCw className={`h-4 w-4 ${isLoadingEmails ? 'animate-spin' : ''}`} />
             </Button>
             {!isMobile && (
               <Button 
@@ -426,6 +450,18 @@ export default function InboxPage() {
           </div>
         </div>
         
+        {/* Debug Panel - Only show in development */}
+        {process.env.NODE_ENV === 'development' && (
+          <GmailDebugPanel
+            gmailConnected={gmailConnected}
+            gmailMessage={gmailMessage}
+            gmailError={gmailError}
+            isLoadingEmails={isLoadingEmails}
+            emailCount={emails.length}
+            onRefresh={() => fetchEmails()}
+          />
+        )}
+        
         <div className="flex-1 overflow-auto">
           {isLoadingEmails && emails.length === 0 ? (
             <div className="flex items-center justify-center py-12">
@@ -438,75 +474,64 @@ export default function InboxPage() {
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
                 <Mail className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                {!gmailConnected && (gmailMessage || gmailError) ? (
-                  <>
-                    <p className="text-muted-foreground mb-2">Gmail not connected</p>
-                    {gmailError ? (
+                
+                {/* Always show Connect Gmail button when no emails */}
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-muted-foreground mb-2">
+                      {gmailConnected ? 'No emails found' : 'Gmail not connected'}
+                    </p>
+                    {gmailMessage && (
+                      <p className="text-sm text-muted-foreground mb-4">{gmailMessage}</p>
+                    )}
+                    {gmailError && (
                       <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 mb-4">
                         <p className="text-sm text-red-600 dark:text-red-400 font-medium">Connection Error</p>
                         <p className="text-sm text-red-500 dark:text-red-300 mt-1">{gmailError}</p>
                       </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground mb-4">{gmailMessage}</p>
                     )}
-                    <div className="flex flex-col sm:flex-row gap-2">
+                  </div>
+                  
+                  {/* Connect Gmail Button - Always visible when no emails */}
+                  <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                    <Button 
+                      onClick={handleConnectGmail} 
+                      disabled={isConnectingGmail}
+                      className="mb-2"
+                    >
+                      {isConnectingGmail ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Connecting...
+                        </>
+                      ) : (
+                        <>
+                          <Mail className="h-4 w-4 mr-2" />
+                          Connect Gmail
+                        </>
+                      )}
+                    </Button>
+                    
+                    {gmailError && (
                       <Button 
-                        onClick={handleConnectGmail} 
+                        variant="outline" 
+                        onClick={handleRetryGmailConnection}
                         disabled={isConnectingGmail}
                         className="mb-2"
                       >
-                        {isConnectingGmail ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Connecting...
-                          </>
-                        ) : (
-                          'Connect Gmail'
-                        )}
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Try Again
                       </Button>
-                      {gmailError && (
-                        <Button 
-                          variant="outline" 
-                          onClick={handleRetryGmailConnection}
-                          disabled={isConnectingGmail}
-                          className="mb-2"
-                        >
-                          <RefreshCw className="h-4 w-4 mr-2" />
-                          Try Again
-                        </Button>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">Or use demo emails below</p>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-muted-foreground">No emails found</p>
-                    <p className="text-sm text-muted-foreground">Your inbox is empty or try a different search</p>
-                    {!gmailConnected && (
-                      <div className="mt-4">
-                        <Button 
-                          variant="outline" 
-                          onClick={handleConnectGmail}
-                          disabled={isConnectingGmail}
-                          className="mb-2"
-                        >
-                          {isConnectingGmail ? (
-                            <>
-                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                              Connecting...
-                            </>
-                          ) : (
-                            <>
-                              <Mail className="h-4 w-4 mr-2" />
-                              Connect Gmail
-                            </>
-                          )}
-                        </Button>
-                        <p className="text-xs text-muted-foreground">Connect Gmail to see your real emails</p>
-                      </div>
                     )}
-                  </>
-                )}
+                  </div>
+                  
+                  <p className="text-xs text-muted-foreground">
+                    {gmailConnected 
+                      ? 'Your inbox appears to be empty or try a different search' 
+                      : 'Connect Gmail to see your real emails'
+                    }
+                  </p>
+                </div>
               </div>
             </div>
           ) : (
