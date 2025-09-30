@@ -334,7 +334,21 @@ export default function InboxPage() {
     setGmailError(null);
     
     try {
-      const redirectUri = `${window.location.origin}/auth/gmail/callback`;
+      // Smart redirect URI detection
+      const getRedirectUri = () => {
+        const hostname = window.location.hostname;
+        
+        // Check if we're on Vercel production
+        if (hostname.includes('vercel.app') && !hostname.includes('localhost')) {
+          // Use the stable production domain
+          return 'https://super-mail.vercel.app/auth/gmail/callback';
+        }
+        
+        // For localhost and other environments, use current origin
+        return `${window.location.origin}/auth/gmail/callback`;
+      };
+      
+      const redirectUri = getRedirectUri();
       
       console.log('Using redirect URI:', redirectUri);
       
