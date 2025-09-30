@@ -7,11 +7,16 @@ import { encryptToken } from '@/lib/auth';
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
+  console.log('🔗 Gmail connect API called');
+  
   try {
     // Get user from Clerk auth
     const { userId } = await auth();
+    
+    console.log('🔗 User ID from Clerk:', userId);
 
     if (!userId) {
+      console.error('❌ No user ID from Clerk auth');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

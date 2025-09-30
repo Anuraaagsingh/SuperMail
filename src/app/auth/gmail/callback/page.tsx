@@ -12,18 +12,26 @@ function GmailCallbackContent() {
 
   useEffect(() => {
     const handleGmailCallback = async () => {
+      console.log('🔗 Gmail callback handler started');
+      console.log('🔗 Current URL:', window.location.href);
+      console.log('🔗 Search params:', Object.fromEntries(new URLSearchParams(window.location.search)));
+      
       try {
         const code = searchParams.get('code');
         const state = searchParams.get('state');
         const error = searchParams.get('error');
 
+        console.log('🔗 OAuth params:', { code: !!code, state, error });
+
         if (error) {
+          console.error('❌ OAuth error:', error);
           setStatus('error');
           setMessage('Gmail connection was cancelled or failed.');
           return;
         }
 
         if (!code) {
+          console.error('❌ No authorization code received');
           setStatus('error');
           setMessage('No authorization code received from Google.');
           return;
