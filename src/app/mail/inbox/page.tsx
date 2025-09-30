@@ -336,6 +336,8 @@ export default function InboxPage() {
     try {
       const redirectUri = `${window.location.origin}/auth/gmail/callback`;
       
+      console.log('Using redirect URI:', redirectUri);
+      
       // Get the OAuth URL from our API
       const response = await fetch(`/api/gmail/oauth?redirect_uri=${encodeURIComponent(redirectUri)}`);
       const data = await response.json();
