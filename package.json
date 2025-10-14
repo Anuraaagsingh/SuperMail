@@ -9,7 +9,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "setup": "node setup-env.js"
+    "setup": "node setup-env.js",
+    "setup:dev": "node setup-domain.js development",
+    "setup:preview": "node setup-domain.js preview",
+    "setup:prod": "node setup-domain.js production"
   },
   "keywords": [],
   "author": "",

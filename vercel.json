@@ -5,6 +5,20 @@
     }
   },
   "env": {
-    "NEXT_PUBLIC_APP_URL": "https://super-mail.vercel.app"
-  }
+    "NEXT_PUBLIC_APP_URL": "https://mastermail.live"
+  },
+  "domains": ["mastermail.live"],
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "super-mail.vercel.app"
+        }
+      ],
+      "destination": "https://mastermail.live/$1",
+      "permanent": true
+    }
+  ]
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { GMAIL_SCOPES } from '@/lib/auth';
+import { getGmailCallbackURL } from '@/lib/urls';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -26,14 +27,7 @@ export async function GET(request: NextRequest) {
     }
 
     const searchParams = request.nextUrl.searchParams;
-    const redirectUri = searchParams.get('redirect_uri');
-
-    if (!redirectUri) {
-      return NextResponse.json(
-        { error: 'Redirect URI is required' },
-        { status: 400 }
-      );
-    }
+    const redirectUri = searchParams.get('redirect_uri') || getGmailCallbackURL();
 
     // Build Google OAuth URL
     const googleAuthUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
