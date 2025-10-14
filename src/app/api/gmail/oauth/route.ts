@@ -8,19 +8,34 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('🔗 Gmail OAuth API called');
+    console.log('🔗 Request URL:', request.url);
+    console.log('🔗 Environment check:');
+    console.log('  GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? 'Set (' + process.env.GOOGLE_CLIENT_ID.substring(0, 20) + '...)' : 'NOT SET');
+    console.log('  GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET ? 'Set' : 'NOT SET');
+    
     // Get user from Clerk auth
     const { userId } = await auth();
 
     if (!userId) {
+      console.log('❌ No user ID from Clerk auth');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    console.log('✅ User ID from Clerk:', userId);
+
     // Check if Gmail API credentials are configured
     if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+      console.log('❌ Gmail API credentials not configured');
       return NextResponse.json(
         { 
           error: 'Gmail not configured',
-          message: 'Gmail API credentials are not configured. Please set up Google OAuth credentials to connect Gmail.'
+          message: 'Gmail API credentials are not configured. Please set up Google OAuth credentials to connect Gmail.',
+          debug: {
+            hasClientId: !!process.env.GOOGLE_CLIENT_ID,
+            hasClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
+            clientIdPreview: process.env.GOOGLE_CLIENT_ID ? process.env.GOOGLE_CLIENT_ID.substring(0, 20) + '...' : 'undefined'
+          }
         },
         { status: 503 }
       );
@@ -28,6 +43,9 @@ export async function GET(request: NextRequest) {
 
     const searchParams = request.nextUrl.searchParams;
     const redirectUri = searchParams.get('redirect_uri') || getGmailCallbackURL();
+    
+    console.log('🔗 Redirect URI:', redirectUri);
+    console.log('🔗 Gmail scopes:', GMAIL_SCOPES);
 
     // Build Google OAuth URL
     const googleAuthUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
@@ -40,13 +58,34 @@ export async function GET(request: NextRequest) {
     googleAuthUrl.searchParams.set('state', userId); // Pass Clerk user ID as state
     googleAuthUrl.searchParams.set('include_granted_scopes', 'true');
 
+    const finalUrl = googleAuthUrl.toString();
+    console.log('🔗 Generated OAuth URL:', finalUrl);
+    console.log('🔗 OAuth URL parameters:');
+    console.log('  client_id:', googleAuthUrl.searchParams.get('client_id') ? 'Present' : 'Missing');
+    console.log('  redirect_uri:', googleAuthUrl.searchParams.get('redirect_uri'));
+    console.log('  response_type:', googleAuthUrl.searchParams.get('response_type'));
+    console.log('  scope:', googleAuthUrl.searchParams.get('scope')?.substring(0, 50) + '...');
+
     return NextResponse.json({
-      authUrl: googleAuthUrl.toString(),
+      authUrl: finalUrl,
+      debug: {
+        hasClientId: !!process.env.GOOGLE_CLIENT_ID,
+        redirectUri,
+        scopes: GMAIL_SCOPES,
+        urlGenerated: true
+      }
     });
   } catch (error) {
-    console.error('Error generating OAuth URL:', error);
+    console.error('❌ Error generating OAuth URL:', error);
     return NextResponse.json(
-      { error: 'Failed to generate OAuth URL' },
+      { 
+        error: 'Failed to generate OAuth URL',
+        debug: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          hasClientId: !!process.env.GOOGLE_CLIENT_ID,
+          hasClientSecret: !!process.env.GOOGLE_CLIENT_SECRET
+        }
+      },
       { status: 500 }
     );
   }
