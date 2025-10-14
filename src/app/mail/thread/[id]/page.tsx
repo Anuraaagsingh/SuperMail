@@ -27,7 +27,7 @@ export default function ThreadPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const threadId = params.id as string;
   
-  const [email, setEmail] = useState<any>(null);
+  const [thread, setThread] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
@@ -36,45 +36,15 @@ export default function ThreadPage() {
       return;
     }
     
-    // Fetch demo thread
     const fetchThread = async () => {
       try {
-        const result = await getDemoThread(threadId);
-        if (result.messages && result.messages.length > 0) {
-          const email = result.messages[0]; // Get the first message in the thread
-          
-          // Extract headers
-          const headers = email.payload?.headers || [];
-          const subject = headers.find((h: any) => h.name === 'Subject')?.value || 'No Subject';
-          const from = headers.find((h: any) => h.name === 'From')?.value || '';
-          const to = headers.find((h: any) => h.name === 'To')?.value || '';
-          const date = headers.find((h: any) => h.name === 'Date')?.value || '';
-          
-          // Extract sender name and email
-          const senderMatch = from.match(/(?:"?([^"]*)"?\s)?(?:<?(.+@[^>]+)>?)/);
-          const senderName = senderMatch ? (senderMatch[1] || senderMatch[2]) : from;
-          const senderEmail = senderMatch ? senderMatch[2] : from;
-          
-          // Extract body
-          const body = email.payload?.body?.data || email.snippet;
-          
-          setEmail({
-            id: email.id,
-            threadId: email.threadId,
-            subject,
-            from: senderName,
-            fromEmail: senderEmail,
-            to,
-            date,
-            isRead: !email.labelIds.includes('UNREAD'),
-            isStarred: email.labelIds.includes('STARRED'),
-            body,
-            snippet: email.snippet
-          });
-        }
-        setIsLoading(false);
+        const res = await fetch(`/api/mail/thread?id=${encodeURIComponent(threadId)}`);
+        if (!res.ok) throw new Error('Failed to fetch thread');
+        const result = await res.json();
+        setThread(result);
       } catch (error) {
         console.error('Error fetching thread:', error);
+      } finally {
         setIsLoading(false);
       }
     };
@@ -90,7 +60,7 @@ export default function ThreadPage() {
     );
   }
   
-  if (!email) {
+  if (!thread) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -135,11 +105,11 @@ export default function ThreadPage() {
           
           <div className="flex-1 min-w-0">
             <h1 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-white truncate">
-              {email.subject}
+              {thread.messages?.[thread.messages.length - 1]?.subject || 'No Subject'}
             </h1>
             <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
               <Clock className="w-4 h-4" />
-              <span>{formatTime(email.date)}</span>
+              <span>{formatTime(thread.messages?.[thread.messages.length - 1]?.date || new Date().toISOString())}</span>
             </div>
           </div>
           
@@ -174,37 +144,45 @@ export default function ThreadPage() {
             <CardHeader className="pb-4">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white font-medium text-lg flex-shrink-0">
-                  {email.from.charAt(0).toUpperCase()}
+                  {(thread.messages?.[thread.messages.length - 1]?.from || 'U').charAt(0).toUpperCase()}
                 </div>
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="font-semibold text-slate-900 dark:text-white">
-                      {email.from}
+                    {thread.messages?.[thread.messages.length - 1]?.from}
                     </h3>
-                    {!email.isRead && (
+                    {!thread.messages?.[thread.messages.length - 1]?.isRead && (
                       <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400">
                         Unread
                       </Badge>
                     )}
                   </div>
                   
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
-                    {email.fromEmail}
-                  </p>
+                  {/* Sender email not included in processed shape; omit for now */}
                   
                   <p className="text-sm text-slate-500 dark:text-slate-500 mt-1">
-                    to {email.to}
+                    to {thread.messages?.[thread.messages.length - 1]?.to}
                   </p>
                 </div>
               </div>
             </CardHeader>
             
             <CardContent className="pt-0">
-              <div 
-                className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-slate-900 dark:prose-headings:text-white prose-p:text-slate-700 dark:prose-p:text-slate-300"
-                dangerouslySetInnerHTML={{ __html: email.body }}
-              />
+              <div className="space-y-6">
+                {thread.messages?.map((m: any) => (
+                  <div key={m.id} className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-slate-900 dark:prose-headings:text-white prose-p:text-slate-700 dark:prose-p:text-slate-300">
+                    <div className="text-xs text-slate-500 dark:text-slate-400 mb-2">
+                      From: {m.from} • To: {m.to} • {new Date(m.date).toLocaleString()}
+                    </div>
+                    {m.htmlBody ? (
+                      <div dangerouslySetInnerHTML={{ __html: m.htmlBody }} />
+                    ) : (
+                      <div className="whitespace-pre-wrap">{m.body || m.snippet}</div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </CardContent>
             
             <CardFooter className="pt-4 border-t border-slate-200/50 dark:border-slate-700/50">

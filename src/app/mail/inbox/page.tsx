@@ -113,9 +113,9 @@ export default function InboxPage() {
       if (pageToken) params.append('pageToken', pageToken);
       params.append('maxResults', '20');
       
-      console.log('📡 Making request to:', `/api/gmail/messages?${params.toString()}`);
+      console.log('📡 Making request to:', `/api/mail/threads?${params.toString()}`);
       
-      const response = await fetch(`/api/gmail/messages?${params.toString()}`);
+      const response = await fetch(`/api/mail/threads?${params.toString()}`);
       console.log('📡 Response status:', response.status);
       
       const data = await response.json();

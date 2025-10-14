@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createGmailClient } from '@/lib/gmail';
+import { createGmailClient, processGmailMessage } from '@/lib/gmail';
 import { auth } from '@clerk/nextjs/server';
 
 // Force dynamic rendering
@@ -27,8 +27,16 @@ export async function GET(request: NextRequest) {
     
     // Get thread
     const thread = await gmailClient.getThread(threadId);
-    
-    return NextResponse.json(thread);
+
+    const processedMessages = Array.isArray(thread.messages)
+      ? thread.messages.map((m: any) => processGmailMessage(m))
+      : [];
+
+    return NextResponse.json({
+      id: thread.id,
+      historyId: thread.historyId,
+      messages: processedMessages,
+    });
   } catch (error) {
     console.error('Error fetching thread:', error);
     return NextResponse.json(

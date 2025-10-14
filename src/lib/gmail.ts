@@ -127,6 +127,37 @@ export const createGmailClient = (userId: string) => {
       return fetchWithRetry(url, { headers });
     },
     
+    // List threads in the user's mailbox
+    listThreads: async (
+      labelIds: string[] = ['INBOX'],
+      maxResults = 20,
+      pageToken?: string,
+      q?: string
+    ) => {
+      const queryParams = new URLSearchParams();
+      
+      if (labelIds.length > 0) {
+        labelIds.forEach(id => queryParams.append('labelIds', id));
+      }
+      
+      if (maxResults) {
+        queryParams.append('maxResults', maxResults.toString());
+      }
+      
+      if (pageToken) {
+        queryParams.append('pageToken', pageToken);
+      }
+      
+      if (q) {
+        queryParams.append('q', q);
+      }
+      
+      const url = `${GMAIL_API_BASE}/threads?${queryParams.toString()}`;
+      const headers = await getHeaders();
+      
+      return fetchWithRetry(url, { headers });
+    },
+    
     // Get a specific message with full details
     getMessage: async (messageId: string, format: 'full' | 'metadata' | 'minimal' = 'full') => {
       const url = `${GMAIL_API_BASE}/messages/${messageId}?format=${format}`;
