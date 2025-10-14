@@ -1,14 +1,15 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
 
-export default clerkMiddleware();
+// Mark Gmail OAuth callback as a public route; protect everything else by default
+export default clerkMiddleware({
+  publicRoutes: ["/auth/gmail/callback"],
+});
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
-    "/((?!_next|[^?]*\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    // Standard Clerk matcher: run on all routes except static assets and Next internals
+    "/((?!.*\\..*|_next).*)",
     // Always run for API routes
     "/(api|trpc)(.*)",
-    // Exclude Gmail callback route from Clerk middleware
-    "/((?!auth/gmail/callback).*)",
   ],
 };
