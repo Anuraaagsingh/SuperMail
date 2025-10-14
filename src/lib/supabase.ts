@@ -44,12 +44,31 @@ export const createSupabaseServerClient = (cookieStore?: any) => {
 
 // Create a Supabase client with service role for server usage (protected API)
 export const createSupabaseServiceClient = () => {
-  if (!supabaseUrl || !supabaseServiceKey) {
-    throw new Error('Supabase service environment variables not configured. Please set supermail_NEXT_PUBLIC_SUPABASE_URL and supermail_SUPABASE_SERVICE_ROLE_KEY in your environment variables.');
+  const url = process.env.supermail_NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.supermail_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+  
+  if (!url) {
+    console.error('❌ Supabase URL not configured');
+    console.error('Available env vars:', {
+      supermail_NEXT_PUBLIC_SUPABASE_URL: !!process.env.supermail_NEXT_PUBLIC_SUPABASE_URL,
+      NEXT_PUBLIC_SUPABASE_URL: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+    });
+    throw new Error('Supabase URL not configured. Please set supermail_NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL');
   }
   
+  if (!serviceKey) {
+    console.error('❌ Supabase service key not configured');
+    console.error('Available env vars:', {
+      supermail_SUPABASE_SERVICE_ROLE_KEY: !!process.env.supermail_SUPABASE_SERVICE_ROLE_KEY,
+      SUPABASE_SERVICE_ROLE_KEY: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    });
+    throw new Error('Supabase service key not configured. Please set supermail_SUPABASE_SERVICE_ROLE_KEY or SUPABASE_SERVICE_ROLE_KEY');
+  }
+  
+  console.log('🔗 Creating Supabase service client with URL:', url);
+  
   // Use the service role key directly for server-side operations
-  return createClient(supabaseUrl, supabaseServiceKey, {
+  return createClient(url, serviceKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false
