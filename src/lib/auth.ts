@@ -63,14 +63,23 @@ export const refreshAccessToken = async (refreshToken: string) => {
 
 
 // Get valid access token for a user
-export const getValidAccessToken = async (userId: string) => {
+export const getValidAccessToken = async (clerkUserId: string) => {
   const supabase = createSupabaseServerClient();
   
-  // Get token from database
+  // Resolve internal user ID from Clerk user ID
+  const { data: userRow } = await supabase
+    .from('users')
+    .select('id')
+    .eq('clerk_id', clerkUserId)
+    .single();
+
+  const internalUserId = userRow?.id || clerkUserId; // fallback for legacy data
+  
+  // Get token from database using internal user id
   const { data: tokenData, error } = await supabase
     .from('tokens')
     .select('encrypted_refresh_token, access_token, expires_at')
-    .eq('user_id', userId)
+    .eq('user_id', internalUserId)
     .single();
   
   if (error || !tokenData) {
@@ -102,7 +111,7 @@ export const getValidAccessToken = async (userId: string) => {
         access_token: tokenResponse.access_token,
         expires_at: newExpiresAt.toISOString(),
       })
-      .eq('user_id', userId);
+      .eq('user_id', internalUserId);
     
     return tokenResponse.access_token;
   } catch (error) {

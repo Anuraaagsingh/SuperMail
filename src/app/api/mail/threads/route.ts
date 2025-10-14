@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { createGmailClient, processGmailMessage } from '@/lib/gmail';
+import { createSupabaseServiceClient } from '@/lib/supabase';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -17,6 +18,61 @@ export async function GET(request: NextRequest) {
     const pageToken = searchParams.get('pageToken') || undefined;
     const maxResults = parseInt(searchParams.get('maxResults') || '20', 10);
     const q = searchParams.get('q') || undefined;
+
+    // Optional configuration check
+    if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+      return NextResponse.json({
+        messages: [],
+        nextPageToken: null,
+        resultSizeEstimate: 0,
+        error: 'Gmail not configured',
+        message: 'Gmail API credentials are not configured.'
+      });
+    }
+
+    // Verify Gmail connection for this user (presence of google_id and tokens)
+    const supabase = createSupabaseServiceClient();
+    const { data: userRow, error: userErr } = await supabase
+      .from('users')
+      .select('id, google_id')
+      .eq('clerk_id', userId)
+      .single();
+
+    if (userErr) {
+      return NextResponse.json({
+        messages: [],
+        nextPageToken: null,
+        resultSizeEstimate: 0,
+        error: 'Database error',
+        message: 'Failed to fetch user data.'
+      });
+    }
+
+    if (!userRow?.id || !userRow.google_id) {
+      return NextResponse.json({
+        messages: [],
+        nextPageToken: null,
+        resultSizeEstimate: 0,
+        error: 'Gmail not connected',
+        message: 'Connect your Gmail account to see emails.'
+      });
+    }
+
+    const { data: tokenRow } = await supabase
+      .from('tokens')
+      .select('id')
+      .eq('user_id', userRow.id)
+      .single();
+
+    if (!tokenRow) {
+      return NextResponse.json({
+        messages: [],
+        nextPageToken: null,
+        resultSizeEstimate: 0,
+        error: 'Gmail not connected',
+        message: 'No Gmail tokens found for this user.'
+      });
+    }
 
     const gmailClient = createGmailClient(userId);
 
