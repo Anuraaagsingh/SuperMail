@@ -15,9 +15,9 @@ export async function POST(request: NextRequest) {
     
     console.log('🔗 User ID from Clerk:', userId);
 
-    // Extract userId from request body if not available from auth
+    // Parse request body once
     const body = await request.json();
-    const userIdFromBody = body.userId;
+    const { code, redirectUri, userId: userIdFromBody } = body;
     
     const effectiveUserId = userId || userIdFromBody;
     
@@ -36,9 +36,6 @@ export async function POST(request: NextRequest) {
         { status: 503 }
       );
     }
-
-    const body = await request.json();
-    const { code, redirectUri } = body;
 
     if (!code || !redirectUri) {
       return NextResponse.json(
