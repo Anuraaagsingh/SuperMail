@@ -1,8 +1,26 @@
 import { createSupabaseServerClient } from './supabase';
 import CryptoJS from 'crypto-js';
+import { getCurrentEnvironment } from './urls';
 
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
-const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
+// Use environment-specific client IDs
+const getGoogleClientId = () => {
+  const env = getCurrentEnvironment();
+  if (env === 'preview') {
+    return process.env.PREVIEW_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || '';
+  }
+  return process.env.GOOGLE_CLIENT_ID || '';
+};
+
+const getGoogleClientSecret = () => {
+  const env = getCurrentEnvironment();
+  if (env === 'preview') {
+    return process.env.PREVIEW_GOOGLE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET || '';
+  }
+  return process.env.GOOGLE_CLIENT_SECRET || '';
+};
+
+const GOOGLE_CLIENT_ID = getGoogleClientId();
+const GOOGLE_CLIENT_SECRET = getGoogleClientSecret();
 const JWT_SECRET = process.env.supermail_SUPABASE_JWT_SECRET || process.env.SUPABASE_JWT_SECRET || process.env.JWT_SECRET || 'fallback-jwt-secret-for-development-only';
 
 // Required Gmail API scopes - Updated based on Gmail API documentation
