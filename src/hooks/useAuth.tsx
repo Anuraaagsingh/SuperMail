@@ -2,7 +2,8 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth as useClerkAuth, useUser } from '@clerk/nextjs';
+import { createSupabaseClient } from '@supermail/lib/supabase';
+import { Session, User as SupabaseUser } from '@supabase/supabase-js';
 
 interface User {
   id: string;
@@ -23,20 +24,25 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { isLoaded, isSignedIn, signOut } = useClerkAuth();
-  const { user: clerkUser } = useUser();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [session, setSession] = useState<Session | null>(null);
   const router = useRouter();
-
+  
   useEffect(() => {
-    if (isLoaded) {
-      if (isSignedIn && clerkUser) {
+    const supabase = createSupabaseClient();
+    
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      
+      if (session?.user) {
+        const supabaseUser = session.user;
         setUser({
-          id: clerkUser.id,
-          email: clerkUser.emailAddresses[0]?.emailAddress || '',
-          name: clerkUser.fullName || '',
-          picture: clerkUser.imageUrl,
+          id: supabaseUser.id,
+          email: supabaseUser.email || '',
+          name: supabaseUser.user_metadata?.full_name || '',
+          picture: supabaseUser.user_metadata?.avatar_url || '',
         });
       } else {
         // Check for demo user in localStorage
@@ -55,12 +61,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
       setIsLoading(false);
-    }
-  }, [isLoaded, isSignedIn, clerkUser]);
+    });
+    
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      
+      if (session?.user) {
+        const supabaseUser = session.user;
+        setUser({
+          id: supabaseUser.id,
+          email: supabaseUser.email || '',
+          name: supabaseUser.user_metadata?.full_name || '',
+          picture: supabaseUser.user_metadata?.avatar_url || '',
+        });
+      } else if (!localStorage.getItem('user')) {
+        setUser(null);
+      }
+    });
+    
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const login = async (code: string, redirectUri: string) => {
-    // This method is no longer needed with Clerk
-    throw new Error('Use Clerk authentication components instead');
+    // This method is no longer needed with Supabase
+    throw new Error('Use Supabase authentication components instead');
   };
 
   const loginWithDemo = async () => {
@@ -84,8 +111,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    if (isSignedIn) {
-      await signOut();
+    const supabase = createSupabaseClient();
+    
+    if (session) {
+      await supabase.auth.signOut();
     } else {
       // Fallback for demo users
       localStorage.removeItem('authToken');

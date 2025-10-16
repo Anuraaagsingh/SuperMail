@@ -6,7 +6,7 @@ import { Button } from '@supermail/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@supermail/components/ui/card';
 import { Input } from '@supermail/components/ui/input';
 import { Label } from '@supermail/components/ui/label';
-import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
+import { SupabaseGoogleLogin } from '@supermail/components/SupabaseGoogleLogin';
 import { useAuth } from '@supermail/hooks/useAuth';
 import { getErrorMessage } from '@supermail/lib/utils';
 import { Mail, Lock, User, ArrowRight, Eye, EyeOff } from 'lucide-react';
@@ -98,7 +98,7 @@ export default function NewLoginPage() {
                 </Button>
               </div>
 
-              {/* Clerk Sign In */}
+              {/* Google Sign In */}
               <div className="p-4 rounded-lg bg-green-500/20 border border-green-400/30">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
@@ -109,16 +109,12 @@ export default function NewLoginPage() {
                     <p className="text-green-200 text-xs">Access your account</p>
                   </div>
                 </div>
-                <SignInButton
-                  mode="modal"
-                  fallbackRedirectUrl="/mail/inbox"
-                >
-                  <Button className="w-full bg-green-500 hover:bg-green-600 text-white">
-                    Sign in with Clerk
-                  </Button>
-                </SignInButton>
+                <SupabaseGoogleLogin 
+                  redirectTo="/mail/inbox"
+                  className="bg-green-500 hover:bg-green-600 text-white"
+                />
                 <p className="text-xs text-green-200/70 mt-2">
-                  Secure authentication powered by Clerk.
+                  Sign in with your Google account to access Gmail.
                 </p>
               </div>
             </div>
