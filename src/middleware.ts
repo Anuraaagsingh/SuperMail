@@ -6,6 +6,8 @@ const isPublicRoute = createRouteMatcher([
   "/auth/gmail/callback",
   "/auth/callback",
   "/api/gmail/oauth",
+  "/api/gmail/connect",
+  "/api/auth/google",
   "/api/debug/supabase",
 ]);
 
@@ -32,6 +34,11 @@ export default clerkMiddleware((auth, req) => {
     const signInUrl = new URL("/auth/login", req.url);
     signInUrl.searchParams.set("redirect_url", req.url);
     return NextResponse.redirect(signInUrl);
+  }
+
+  // Special handling for Gmail connection routes - allow even if user is authenticated
+  if (pathname.startsWith("/api/gmail/connect") || pathname.startsWith("/auth/gmail")) {
+    return NextResponse.next();
   }
 
   // Redirect authenticated users from auth pages to inbox

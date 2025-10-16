@@ -15,8 +15,14 @@ export async function POST(request: NextRequest) {
     
     console.log('🔗 User ID from Clerk:', userId);
 
-    if (!userId) {
-      console.error('❌ No user ID from Clerk auth');
+    // Extract userId from request body if not available from auth
+    const body = await request.json();
+    const userIdFromBody = body.userId;
+    
+    const effectiveUserId = userId || userIdFromBody;
+    
+    if (!effectiveUserId) {
+      console.error('❌ No user ID from Clerk auth or request body');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

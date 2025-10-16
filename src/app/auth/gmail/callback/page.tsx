@@ -49,6 +49,7 @@ function GmailCallbackContent() {
           body: JSON.stringify({
             code,
             redirectUri,
+            userId: state, // Include the state parameter which contains the userId
           }),
         });
 
