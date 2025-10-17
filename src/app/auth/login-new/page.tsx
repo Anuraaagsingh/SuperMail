@@ -167,8 +167,5 @@ export default function NewLoginPage() {
           </Card>
         </div>
       </div>
-
-
-    </div>
   );
 }

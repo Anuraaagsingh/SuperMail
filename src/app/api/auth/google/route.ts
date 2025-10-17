@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { createSupabaseServiceClient } from '@/lib/supabase';
 import { GMAIL_SCOPES } from '@/lib/auth';
 
 // Force dynamic rendering
@@ -7,10 +7,11 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    // Get user from Clerk auth
-    const { userId } = await auth();
+    // Get user from Supabase auth
+    const supabase = createSupabaseServiceClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    if (!userId) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
     googleAuthUrl.searchParams.set('scope', GMAIL_SCOPES.join(' '));
     googleAuthUrl.searchParams.set('access_type', 'offline');
     googleAuthUrl.searchParams.set('prompt', 'consent');
-    googleAuthUrl.searchParams.set('state', userId); // Pass Clerk user ID as state
+    googleAuthUrl.searchParams.set('state', user.id); // Pass Supabase user ID as state
 
     return NextResponse.json({
       authUrl: googleAuthUrl.toString(),

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { createSupabaseServiceClient } from '@/lib/supabase';
 import { GMAIL_SCOPES } from '@/lib/auth';
 import { getGmailCallbackURL } from '@/lib/urls';
 
@@ -14,15 +14,16 @@ export async function GET(request: NextRequest) {
     console.log('  GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? 'Set (' + process.env.GOOGLE_CLIENT_ID.substring(0, 20) + '...)' : 'NOT SET');
     console.log('  GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET ? 'Set' : 'NOT SET');
     
-    // Get user from Clerk auth
-    const { userId } = await auth();
+    // Get user from Supabase auth
+    const supabase = createSupabaseServiceClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    if (!userId) {
-      console.log('❌ No user ID from Clerk auth');
+    if (!user) {
+      console.log('❌ No user ID from Supabase auth');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log('✅ User ID from Clerk:', userId);
+    console.log('✅ User ID from Supabase:', user.id);
 
     // Check if Gmail API credentials are configured
     if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
@@ -55,7 +56,7 @@ export async function GET(request: NextRequest) {
     googleAuthUrl.searchParams.set('scope', GMAIL_SCOPES.join(' '));
     googleAuthUrl.searchParams.set('access_type', 'offline');
     googleAuthUrl.searchParams.set('prompt', 'consent');
-    googleAuthUrl.searchParams.set('state', userId); // Pass Clerk user ID as state
+    googleAuthUrl.searchParams.set('state', user.id); // Pass Supabase user ID as state
     googleAuthUrl.searchParams.set('include_granted_scopes', 'true');
 
     const finalUrl = googleAuthUrl.toString();

@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@supermail/lib/supabase';
 import { getValidAccessToken } from '@supermail/lib/auth';
-import { auth } from '@clerk/nextjs/server';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
-    // Get user from Clerk auth
-    const { userId } = await auth();
+    // Get user from Supabase auth
+    const supabase = createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id;
     
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -23,11 +24,12 @@ export async function POST(request: NextRequest) {
     }
     
     // Get snoozed email
+    // const { data: snooze, error: fetchError } = await supabase
     const { data: snooze, error: fetchError } = await supabase
       .from('snoozes')
       .select('*')
       .eq('id', id)
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .single();
     
     if (fetchError || !snooze) {

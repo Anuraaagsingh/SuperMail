@@ -7,6 +7,43 @@ const supabaseServiceKey = process.env.supermail_SUPABASE_SERVICE_ROLE_KEY || pr
 
 // Create a Supabase client for browser usage (public API)
 export const createSupabaseClient = () => {
+  // Always return a mock client during build phase to prevent URL validation errors
+  if (process.env.NEXT_PHASE === 'phase-production-build') {
+    console.warn('Supabase environment variables not configured during build. Returning mock client.');
+    return {
+      auth: {
+        getUser: async () => ({ data: { user: null }, error: null }),
+        getSession: async () => ({ data: { session: null }, error: null }),
+        signInWithOAuth: async () => ({ data: { url: null }, error: null }),
+        signOut: async () => ({ error: null }),
+        onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+      },
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            single: async () => ({ data: null, error: null }),
+            maybeSingle: async () => ({ data: null, error: null }),
+          }),
+          maybeSingle: async () => ({ data: null, error: null }),
+        }),
+        update: () => ({
+          eq: () => ({
+            select: () => ({
+              single: async () => ({ data: null, error: null }),
+            }),
+          }),
+        }),
+        upsert: () => ({
+          onConflict: () => ({
+            select: () => ({
+              single: async () => ({ data: null, error: null }),
+            }),
+          }),
+        }),
+      }),
+    } as any; // Cast to any to satisfy type checking for the mock
+  }
+
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error('Supabase environment variables not configured. Please set supermail_NEXT_PUBLIC_SUPABASE_URL and supermail_NEXT_PUBLIC_SUPABASE_ANON_KEY in your environment variables.');
   }
@@ -16,6 +53,43 @@ export const createSupabaseClient = () => {
 
 // Create a Supabase client for server usage (SSR)
 export const createSupabaseServerClient = (cookieStore?: any) => {
+  // Always return a mock client during build phase to prevent URL validation errors
+  if (process.env.NEXT_PHASE === 'phase-production-build') {
+    console.warn('Supabase environment variables not configured during build. Returning mock server client.');
+    return {
+      auth: {
+        getUser: async () => ({ data: { user: null }, error: null }),
+        getSession: async () => ({ data: { session: null }, error: null }),
+        signInWithOAuth: async () => ({ data: { url: null }, error: null }),
+        signOut: async () => ({ error: null }),
+        onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+      },
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            single: async () => ({ data: null, error: null }),
+            maybeSingle: async () => ({ data: null, error: null }),
+          }),
+          maybeSingle: async () => ({ data: null, error: null }),
+        }),
+        update: () => ({
+          eq: () => ({
+            select: () => ({
+              single: async () => ({ data: null, error: null }),
+            }),
+          }),
+        }),
+        upsert: () => ({
+          onConflict: () => ({
+            select: () => ({
+              single: async () => ({ data: null, error: null }),
+            }),
+          }),
+        }),
+      }),
+    } as any; // Cast to any to satisfy type checking for the mock
+  }
+
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error('Supabase environment variables not configured. Please set supermail_NEXT_PUBLIC_SUPABASE_URL and supermail_NEXT_PUBLIC_SUPABASE_ANON_KEY in your environment variables.');
   }
@@ -46,7 +120,44 @@ export const createSupabaseServerClient = (cookieStore?: any) => {
 export const createSupabaseServiceClient = () => {
   const url = process.env.supermail_NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.supermail_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
-  
+
+  // Always return a mock client during build phase to prevent URL validation errors
+  if (process.env.NEXT_PHASE === 'phase-production-build') {
+    console.warn('Supabase service client environment variables not configured during build. Returning mock service client.');
+    return {
+      auth: {
+        getUser: async () => ({ data: { user: null }, error: null }),
+        getSession: async () => ({ data: { session: null }, error: null }),
+        signInWithOAuth: async () => ({ data: { url: null }, error: null }),
+        signOut: async () => ({ error: null }),
+        onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+      },
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            single: async () => ({ data: null, error: null }),
+            maybeSingle: async () => ({ data: null, error: null }),
+          }),
+          maybeSingle: async () => ({ data: null, error: null }),
+        }),
+        update: () => ({
+          eq: () => ({
+            select: () => ({
+              single: async () => ({ data: null, error: null }),
+            }),
+          }),
+        }),
+        upsert: () => ({
+          onConflict: () => ({
+            select: () => ({
+              single: async () => ({ data: null, error: null }),
+            }),
+          }),
+        }),
+      }),
+    } as any;
+  }
+
   if (!url) {
     console.error('❌ Supabase URL not configured');
     console.error('Available env vars:', {
@@ -55,7 +166,7 @@ export const createSupabaseServiceClient = () => {
     });
     throw new Error('Supabase URL not configured. Please set supermail_NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL');
   }
-  
+
   if (!serviceKey) {
     console.error('❌ Supabase service key not configured');
     console.error('Available env vars:', {
@@ -64,9 +175,9 @@ export const createSupabaseServiceClient = () => {
     });
     throw new Error('Supabase service key not configured. Please set supermail_SUPABASE_SERVICE_ROLE_KEY or SUPABASE_SERVICE_ROLE_KEY');
   }
-  
+
   console.log('🔗 Creating Supabase service client with URL:', url);
-  
+
   // Use the service role key directly for server-side operations
   return createClient(url, serviceKey, {
     auth: {
@@ -192,7 +303,6 @@ export type Database = {
           body_html: string;
           recipients_to: string[];
           recipients_cc: string[] | null;
-          recipients_bcc: string[] | null;
           attachments_meta: Record<string, any> | null;
           last_saved_at: string;
         };

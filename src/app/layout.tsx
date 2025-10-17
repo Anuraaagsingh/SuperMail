@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import { ClerkProvider } from '@clerk/nextjs';
 import { ThemeProvider } from '@supermail/components/theme-provider';
 import { AuthProvider } from '@supermail/hooks/useAuth';
 
@@ -18,23 +17,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
-      <html lang="en" suppressHydrationWarning>
-        <body className={inter.className}>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <AuthProvider>
-              <div className="relative min-h-screen flex flex-col">
-                {children}
-              </div>
-            </AuthProvider>
-          </ThemeProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="en" suppressHydrationWarning>
+      <body className={inter.className}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AuthProvider>
+            <div className="relative min-h-screen flex flex-col">
+              {children}
+            </div>
+          </AuthProvider>
+        </ThemeProvider>
+      </body>
+    </html>
   );
 }

@@ -1,22 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
-import { createSupabaseServerClient } from '@/lib/supabase';
+import { createSupabaseServiceClient } from '@/lib/supabase';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    // Get user from Clerk auth
-    const { userId } = await auth();
+    // Get user from Supabase auth
+    const supabase = createSupabaseServiceClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id;
     
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
     // Get user settings from database
-    const supabase = createSupabaseServerClient();
-    const { data: user, error } = await supabase
+    // const supabase = createSupabaseServerClient(); // Already created above
+    const { data: userData, error } = await supabase
       .from('users')
       .select('settings')
       .eq('id', userId)
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest) {
     
     // Return settings or default values
     return NextResponse.json({
-      settings: user?.settings || {
+      settings: userData?.settings || {
         signature: '',
         defaultSnoozePresets: {
           laterToday: 3, // hours
@@ -56,8 +57,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    // Get user from Clerk auth
-    const { userId } = await auth();
+    // Get user from Supabase auth
+    const supabase = createSupabaseServiceClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id;
     
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -75,7 +78,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Update user settings in database
-    const supabase = createSupabaseServerClient();
+    // const supabase = createSupabaseServerClient(); // Already created above
     const { error } = await supabase
       .from('users')
       .update({ settings })

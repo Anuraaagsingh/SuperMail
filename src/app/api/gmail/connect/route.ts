@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 import { encryptToken } from '@/lib/auth';
 
@@ -10,22 +9,23 @@ export async function POST(request: NextRequest) {
   console.log('🔗 Gmail connect API called');
   
   try {
-    // Get user from Clerk auth
-    const { userId } = await auth();
+    // Get user from Supabase auth
+    const supabase = createSupabaseServiceClient();
+    const { data: { user } } = await supabase.auth.getUser();
     
-    console.log('🔗 User ID from Clerk:', userId);
-
-    // Parse request body once
-    const body = await request.json();
-    const { code, redirectUri, userId: userIdFromBody } = body;
-    
-    const effectiveUserId = userId || userIdFromBody;
+    const effectiveUserId = user?.id;
     
     if (!effectiveUserId) {
-      console.error('❌ No user ID from Clerk auth or request body');
+      console.error('❌ No user ID from Supabase auth');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    console.log('🔗 User ID from Supabase:', effectiveUserId);
+
+    // Parse request body once
+    const body = await request.json();
+    const { code, redirectUri } = body;
+    
     // Check if Gmail API credentials are configured
     if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
       return NextResponse.json(
@@ -94,13 +94,13 @@ export async function POST(request: NextRequest) {
     const profile = await profileResponse.json();
 
     // Store user and token in Supabase
-    const supabase = createSupabaseServiceClient();
+    // const supabase = createSupabaseServiceClient();
     
     // Get the user from the users table
     const { data: userData } = await supabase
       .from('users')
       .select('id')
-      .eq('clerk_id', userId)
+      .eq('id', effectiveUserId)
       .single();
 
     if (!userData) {
@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
     await supabase
       .from('users')
       .update({ google_id: profile.id })
-      .eq('clerk_id', userId);
+      .eq('id', effectiveUserId);
 
     // Store the tokens
     const encryptedRefreshToken = encryptToken(refresh_token);

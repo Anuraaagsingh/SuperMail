@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 
 // Force dynamic rendering
@@ -7,15 +6,14 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
-    // Get user from Clerk auth
-    const { userId } = await auth();
+    // const { email, name, avatarUrl } = await request.json(); // Removed redundant destructuring
 
-    console.log('User registration attempt for Clerk ID:', userId);
+    // console.log('User registration attempt for email:', email);
 
-    if (!userId) {
-      console.log('No Clerk user ID found');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    // if (!email) {
+    //   console.log('No email found in request body');
+    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // }
 
     const body = await request.json();
     const { email, name, avatarUrl } = body;
@@ -35,11 +33,11 @@ export async function POST(request: NextRequest) {
     console.log('Supabase client created successfully');
 
     // Check if user already exists
-    console.log('Checking for existing user with clerk_id:', userId);
+    console.log('Checking for existing user with email:', email);
     const { data: existingUser, error: checkError } = await supabase
       .from('users')
       .select('id')
-      .eq('clerk_id', userId)
+      .eq('email', email)
       .single();
 
     if (checkError && checkError.code !== 'PGRST116') {
@@ -69,7 +67,6 @@ export async function POST(request: NextRequest) {
     const { data: newUser, error } = await supabase
       .from('users')
       .insert({
-        clerk_id: userId,
         email,
         name,
         avatar_url: avatarUrl,

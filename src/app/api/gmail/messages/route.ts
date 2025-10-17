@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 import { createGmailClient, processGmailMessage } from '@/lib/gmail';
 
@@ -8,10 +7,11 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    // Get user from Clerk auth
-    const { userId } = await auth();
+    // Get user from Supabase auth
+    const supabase = createSupabaseServiceClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    if (!userId) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -34,11 +34,11 @@ export async function GET(request: NextRequest) {
     const q = searchParams.get('q') || undefined;
 
     // Check if user has Gmail connected
-    const supabase = createSupabaseServiceClient();
+    // const supabase = createSupabaseServiceClient(); // Already created above
     const { data: userData, error: userError } = await supabase
       .from('users')
       .select('id, google_id')
-      .eq('clerk_id', userId)
+      .eq('id', user.id)
       .single();
 
     if (userError) {
@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Create Gmail client and fetch messages
-    const gmailClient = createGmailClient(userId);
+    const gmailClient = createGmailClient(user.id);
     
     try {
       // List messages from Gmail API
